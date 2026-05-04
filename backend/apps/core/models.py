@@ -1,0 +1,1 @@
+# Abstract Base Models that other apps inherit from to avoid repeating code.
