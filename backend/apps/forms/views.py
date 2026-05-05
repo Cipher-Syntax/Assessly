@@ -3,6 +3,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.generics import get_object_or_404
 
 from apps.forms.models import Form
 from apps.forms.permissions import FormAccessPermission, FormOwnerPermission, get_editor_form_ids
@@ -28,6 +29,14 @@ class FormViewSet(viewsets.ModelViewSet):
 		if editor_form_ids:
 			return self.queryset.filter(Q(owner=user) | Q(id__in=editor_form_ids)).distinct()
 		return self.queryset.filter(owner=user)
+
+	def get_object(self):
+		queryset = self.queryset
+		lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+		lookup_value = self.kwargs.get(lookup_url_kwarg)
+		obj = get_object_or_404(queryset, **{self.lookup_field: lookup_value})
+		self.check_object_permissions(self.request, obj)
+		return obj
 
 	def get_permissions(self):
 		if self.action in {"destroy", "publish"}:
