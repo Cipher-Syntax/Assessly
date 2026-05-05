@@ -36,6 +36,9 @@ def create_form(owner, title=None, description=None):
             title=_normalize_title(title),
             description=description or "",
         )
+        from apps.permissions.models import FormAccessSettings
+
+        FormAccessSettings.objects.create(form=form)
         draft = FormVersion.objects.create(
             form=form,
             version=0,

@@ -26,6 +26,37 @@ def resolve_form_role(user, form):
         return None
 
 
+def resolve_access(user, form, scope, token=None):
+    service = _load_permissions_service()
+    if not service:
+        if not user or not user.is_authenticated:
+            return False
+        if form.owner_id == user.id:
+            return True
+        role = resolve_form_role(user, form)
+        return role in {ROLE_OWNER, ROLE_EDITOR}
+    resolve = getattr(service, "resolve_access", None)
+    if not callable(resolve):
+        return False
+    try:
+        return bool(resolve(user, form, scope, token=token))
+    except Exception:
+        return False
+
+
+def get_request_token(request):
+    service = _load_permissions_service()
+    if not service:
+        return None
+    get_token = getattr(service, "get_request_token", None)
+    if not callable(get_token):
+        return None
+    try:
+        return get_token(request)
+    except Exception:
+        return None
+
+
 def get_editor_form_ids(user):
     service = _load_permissions_service()
     if not service:
@@ -42,12 +73,8 @@ def get_editor_form_ids(user):
 class FormAccessPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         user = getattr(request, "user", None)
-        if not user or not user.is_authenticated:
-            return False
-        if obj.owner_id == user.id:
-            return True
-        role = resolve_form_role(user, obj)
-        return role in {ROLE_OWNER, ROLE_EDITOR}
+        token = get_request_token(request)
+        return resolve_access(user, obj, ROLE_EDITOR, token=token)
 
 
 class FormOwnerPermission(BasePermission):
