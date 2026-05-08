@@ -1,10 +1,7 @@
-// eslint-disable-next-line
-import React from 'react'
+import AppRoutes from './Routes';
 
 const App = () => {
-    return (
-        <div>App</div>
-    )
-}
+    return <AppRoutes />;
+};
 
-export default App
+export default App;
