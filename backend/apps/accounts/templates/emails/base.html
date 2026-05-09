@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{{ subject }}</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #0B1220; color: #E6EDF7; font-family: Arial, sans-serif;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0B1220; padding: 32px 16px;">
+            <tr>
+                <td align="center">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="560" style="max-width: 560px; width: 100%; background-color: #111A2E; border: 1px solid #24324A; border-radius: 16px;">
+                        <tr>
+                            <td style="padding: 24px 28px 8px;">
+                                <p style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px;">
+                                    <span style="color: #3B82F6;">{{ app_name }}</span>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0 28px 8px;">
+                                <div style="height: 1px; background-color: #24324A;"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px 28px 24px;">
+                                {% block content %}{% endblock %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0 28px 24px; color: #A7B0C0; font-size: 12px;">
+                                This email was sent by {{ app_name }}. If you did not request this, you can ignore it.
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

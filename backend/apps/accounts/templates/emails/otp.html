@@ -1,0 +1,16 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<p style="margin: 0 0 12px; font-size: 16px; color: #E6EDF7;">
+    Use the verification code below to confirm your email.
+</p>
+<div style="background-color: #16233D; border: 1px solid #24324A; border-radius: 12px; padding: 16px; text-align: center; margin: 16px 0;">
+    <span style="font-size: 28px; letter-spacing: 6px; font-weight: 600; color: #E6EDF7;">{{ code }}</span>
+</div>
+<p style="margin: 0 0 8px; font-size: 14px; color: #A7B0C0;">
+    This code expires in {{ expires_in_minutes }} minutes.
+</p>
+<p style="margin: 0; font-size: 14px; color: #A7B0C0;">
+    Do not share this code with anyone.
+</p>
+{% endblock %}

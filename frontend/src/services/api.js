@@ -36,8 +36,16 @@ api.interceptors.response.use(
 		const isRefreshEndpoint = originalRequest.url?.includes(
 			'/api/auth/token/refresh/'
 		);
+		const isLoginEndpoint = originalRequest.url?.includes('/api/auth/token/');
+		const isGoogleLoginEndpoint = originalRequest.url?.includes('/api/accounts/google/');
 
-		if (isTokenError && !originalRequest._retry && !isRefreshEndpoint) {
+		if (
+			isTokenError &&
+			!originalRequest._retry &&
+			!isRefreshEndpoint &&
+			!isLoginEndpoint &&
+			!isGoogleLoginEndpoint
+		) {
 			originalRequest._retry = true;
 
 			const refreshToken = localStorage.getItem(REFRESH_TOKEN);
