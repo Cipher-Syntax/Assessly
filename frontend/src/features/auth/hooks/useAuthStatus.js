@@ -11,6 +11,8 @@ const decodeToken = (token) => {
 	}
 };
 
+const isJwtLike = (token) => typeof token === 'string' && token.split('.').length === 3;
+
 const isExpired = (payload) => {
 	if (!payload?.exp) {
 		return true;
@@ -43,6 +45,12 @@ const useAuthStatus = () => {
 			const accessToken = localStorage.getItem(ACCESS_TOKEN);
 
 			if (!accessToken) {
+				updateState({ status: 'unauthenticated' });
+				return;
+			}
+
+			if (!isJwtLike(accessToken)) {
+				clearTokens();
 				updateState({ status: 'unauthenticated' });
 				return;
 			}

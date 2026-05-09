@@ -1,10 +1,9 @@
-//eslint-disable-next-line
-import React from 'react'
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
-const Provider = () => {
-    return (
-        <div>Provider</div>
-    )
-}
+const Provider = ({ children }) => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-export default Provider
+    return <GoogleOAuthProvider clientId={clientId}>{children}</GoogleOAuthProvider>;
+};
+
+export default Provider;
