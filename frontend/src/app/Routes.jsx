@@ -1,8 +1,8 @@
 import { BrowserRouter, Route, Routes as RouterRoutes } from 'react-router-dom';
 import AuthForm from '../features/auth/AuthForm';
-import ProtectedForm from '../components/common/ProtectedForm';
 import ProtectedRoute from '../features/auth/components/ProtectedRoute';
 import LandingPage from '../features/landing/LandingPage';
+import DashboardPage from '../features/dashboard/DashboardPage';
 
 const AppRoutes = () => {
     return (
@@ -12,7 +12,7 @@ const AppRoutes = () => {
                 <Route path="/login" element={<AuthForm mode="login" />} />
                 <Route path="/register" element={<AuthForm mode="register" />} />
                 <Route element={<ProtectedRoute />}>
-                    <Route path="/dashboard" element={<ProtectedForm />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
                 </Route>
             </RouterRoutes>
         </BrowserRouter>
