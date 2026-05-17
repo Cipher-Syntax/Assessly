@@ -1,6 +1,6 @@
 import PublicQuestion from './PublicQuestion';
 
-const PublicSection = ({ section, index }) => {
+const PublicSection = ({ section, index, answers, errors, onAnswerChange, isDisabled }) => {
     const title = section?.title || `Section ${index + 1}`;
     const description = section?.description || '';
     const questions = Array.isArray(section?.questions) ? section.questions : [];
@@ -20,6 +20,10 @@ const PublicSection = ({ section, index }) => {
                             key={question.id || `question-${questionIndex}`}
                             question={question}
                             index={questionIndex}
+                            value={answers?.[question.id]}
+                            error={errors?.[question.id]}
+                            onChange={onAnswerChange}
+                            isDisabled={isDisabled}
                         />
                     ))}
                 </div>
