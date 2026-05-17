@@ -90,6 +90,10 @@
 		color: var(--primary-500);
 	}
 
+	.text-danger {
+        color: var(--danger);
+    }
+
 	.border-default {
 		border-color: var(--border-default);
 	}
