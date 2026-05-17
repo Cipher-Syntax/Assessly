@@ -27,6 +27,7 @@ const QuestionCard = ({
     onMoveSection,
     dragHandleProps,
     isDragDisabled,
+    isEditing = true,
     isDragging,
     setNodeRef,
     style,
@@ -51,6 +52,8 @@ const QuestionCard = ({
     const labelError = questionError.label || '';
     const isChoiceQuestion = isChoiceType(question.type);
     const options = Array.isArray(question.options) ? question.options : [];
+    const isInteractionDisabled = !isEditing;
+    const isDragHandleDisabled = isDragDisabled || !isEditing;
 
     const handleLabelChange = (event) => {
         onChange(sectionId, question.id, { label: event.target.value });
@@ -112,7 +115,8 @@ const QuestionCard = ({
                         value={question.label}
                         onChange={handleLabelChange}
                         placeholder="Untitled question"
-                        className="w-full rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none"
+                        disabled={isInteractionDisabled}
+                        className="w-full rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                     />
                     {labelError && <p className="text-xs text-danger">{labelError}</p>}
                 </div>
@@ -139,21 +143,26 @@ const QuestionCard = ({
                                                         handleOptionChange(index, event.target.value)
                                                     }
                                                     placeholder={`Option ${index + 1}`}
-                                                    className="w-full flex-1 rounded-lg border border-default bg-tertiary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none"
+                                                    disabled={isInteractionDisabled}
+                                                    className="w-full flex-1 rounded-lg border border-default bg-tertiary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                                                 />
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDuplicateOption(index)}
-                                                        className="text-xs text-secondary transition hover:text-primary"
+                                                        disabled={isInteractionDisabled}
+                                                        className={`text-xs transition ${isInteractionDisabled
+                                                            ? 'text-muted opacity-50 cursor-not-allowed'
+                                                            : 'text-secondary hover:text-primary'
+                                                            }`}
                                                     >
                                                         Duplicate
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => handleRemoveOption(index)}
-                                                        disabled={isDeleteDisabled}
-                                                        className={`text-xs transition ${isDeleteDisabled
+                                                        disabled={isDeleteDisabled || isInteractionDisabled}
+                                                        className={`text-xs transition ${isDeleteDisabled || isInteractionDisabled
                                                             ? 'text-muted opacity-50 cursor-not-allowed'
                                                             : 'text-muted hover:text-danger'
                                                             }`}
@@ -176,7 +185,11 @@ const QuestionCard = ({
                         <button
                             type="button"
                             onClick={handleAddOption}
-                            className="text-xs text-secondary transition hover:text-primary"
+                            disabled={isInteractionDisabled}
+                            className={`text-xs transition ${isInteractionDisabled
+                                ? 'text-muted opacity-50 cursor-not-allowed'
+                                : 'text-secondary hover:text-primary'
+                                }`}
                         >
                             Add option
                         </button>
@@ -189,7 +202,8 @@ const QuestionCard = ({
                         <select
                             value={question.type}
                             onChange={handleTypeChange}
-                            className="rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none"
+                            disabled={isInteractionDisabled}
+                            className="rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             <option value="short_text">Short text</option>
                             <option value="paragraph">Paragraph</option>
@@ -204,7 +218,8 @@ const QuestionCard = ({
                         <select
                             value={sectionId}
                             onChange={handleSectionChange}
-                            className="rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none"
+                            disabled={isInteractionDisabled}
+                            className="rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {sections.map((section) => (
                                 <option key={section.id} value={section.id}>
@@ -219,7 +234,8 @@ const QuestionCard = ({
                             type="checkbox"
                             checked={question.required}
                             onChange={handleRequiredChange}
-                            className="h-4 w-4 rounded border-default bg-secondary text-primary-500 focus:ring-0"
+                            disabled={isInteractionDisabled}
+                            className="h-4 w-4 rounded border-default bg-secondary text-primary-500 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70"
                         />
                         Required
                     </label>
@@ -228,8 +244,8 @@ const QuestionCard = ({
                         <button
                             type="button"
                             {...dragHandleProps}
-                            disabled={isDragDisabled}
-                            className={`text-xs transition ${isDragDisabled
+                            disabled={isDragHandleDisabled}
+                            className={`text-xs transition ${isDragHandleDisabled
                                 ? 'text-muted opacity-50 cursor-not-allowed'
                                 : 'text-secondary hover:text-primary cursor-grab active:cursor-grabbing'
                                 }`}
@@ -239,7 +255,11 @@ const QuestionCard = ({
                         <button
                             type="button"
                             onClick={() => onDelete(sectionId, question.id)}
-                            className="text-xs text-muted transition hover:text-danger"
+                            disabled={isInteractionDisabled}
+                            className={`text-xs transition ${isInteractionDisabled
+                                ? 'text-muted opacity-50 cursor-not-allowed'
+                                : 'text-muted hover:text-danger'
+                                }`}
                         >
                             Delete
                         </button>
@@ -259,6 +279,7 @@ export const SortableQuestionCard = ({
     onDelete,
     onMoveSection,
     isDragDisabled,
+    isEditing,
 }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({
@@ -292,6 +313,7 @@ export const SortableQuestionCard = ({
             onMoveSection={onMoveSection}
             dragHandleProps={dragHandleProps}
             isDragDisabled={isDragDisabled}
+            isEditing={isEditing}
             isDragging={isDragging}
             setNodeRef={setNodeRef}
             style={style}

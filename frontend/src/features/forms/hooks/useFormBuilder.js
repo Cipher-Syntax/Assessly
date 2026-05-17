@@ -5,7 +5,7 @@ import {
     isChoiceType,
     moveQuestion,
 } from '../utils/schemaHelpers';
-import { fetchForm, saveDraft } from '../services/formService';
+import { fetchForm, publishForm, saveDraft } from '../services/formService';
 
 const SAVE_DELAY_MS = 800;
 
@@ -95,7 +95,10 @@ const useFormBuilder = ({ formId }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [sections, setSections] = useState([createSection()]);
+    const [publishedVersion, setPublishedVersion] = useState(null);
+    const [isEditingDraft, setIsEditingDraft] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
     const [lastSavedAt, setLastSavedAt] = useState(null);
     const [saveError, setSaveError] = useState('');
 
@@ -143,6 +146,8 @@ const useFormBuilder = ({ formId }) => {
             setSections(
                 normalizedSections.length > 0 ? normalizedSections : [createSection()]
             );
+            setPublishedVersion(form.publishedVersion || null);
+            setIsEditingDraft(!form.publishedVersion);
             setLoadError('');
             setSaveError('');
             setStatus('ready');
@@ -165,6 +170,10 @@ const useFormBuilder = ({ formId }) => {
 
     useEffect(() => {
         if (status !== 'ready') {
+            return undefined;
+        }
+
+        if (!isEditingDraft || isPublishing) {
             return undefined;
         }
 
@@ -205,7 +214,75 @@ const useFormBuilder = ({ formId }) => {
         }, SAVE_DELAY_MS);
 
         return () => clearTimeout(timeoutId);
-    }, [status, canSave, formId, title, description, sections]);
+    }, [status, isEditingDraft, isPublishing, canSave, formId, title, description, sections]);
+
+    const applyFormState = useCallback((form, shouldResetEditState = true) => {
+        const normalizedSections = Array.isArray(form.draftSchema.sections)
+            ? form.draftSchema.sections
+            : [createSection()];
+
+        setTitle(form.title || '');
+        setDescription(form.description || '');
+        setSections(
+            normalizedSections.length > 0 ? normalizedSections : [createSection()]
+        );
+        setPublishedVersion(form.publishedVersion || null);
+        if (shouldResetEditState) {
+            setIsEditingDraft(!form.publishedVersion);
+        }
+        setLoadError('');
+        setSaveError('');
+        setStatus('ready');
+        initialLoadRef.current = true;
+    }, []);
+
+    const handlePublish = useCallback(async () => {
+        if (!formId || isPublishing) {
+            return;
+        }
+
+        setIsPublishing(true);
+        setIsSaving(false);
+        setSaveError('');
+        saveSequenceRef.current += 1;
+
+        const { published, error } = await publishForm(formId);
+
+        if (!isMountedRef.current) {
+            return;
+        }
+
+        if (error) {
+            setIsPublishing(false);
+            setSaveError(error);
+            return;
+        }
+
+        const { form, error: reloadError } = await fetchForm(formId);
+
+        if (!isMountedRef.current) {
+            return;
+        }
+
+        if (form) {
+            applyFormState(form, true);
+        } else if (published) {
+            setPublishedVersion(published);
+            setIsEditingDraft(false);
+        }
+
+        if (reloadError) {
+            setSaveError(reloadError);
+        }
+
+        setIsPublishing(false);
+    }, [formId, isPublishing, applyFormState]);
+
+    const handleEditDraft = useCallback(() => {
+        setIsEditingDraft(true);
+        setSaveError('');
+        initialLoadRef.current = true;
+    }, []);
 
     const addSection = useCallback(() => {
         setSections((prev) => [...prev, createSection()]);
@@ -316,7 +393,10 @@ const useFormBuilder = ({ formId }) => {
         title,
         description,
         sections,
+        publishedVersion,
+        isEditingDraft,
         isSaving,
+        isPublishing,
         lastSavedAt,
         saveError,
         validationErrors,
@@ -331,6 +411,8 @@ const useFormBuilder = ({ formId }) => {
             deleteQuestion,
             addQuestion,
             moveQuestion: moveQuestionAction,
+            publishForm: handlePublish,
+            editDraft: handleEditDraft,
         },
     };
 };
