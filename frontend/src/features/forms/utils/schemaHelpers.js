@@ -1,10 +1,29 @@
-const ALLOWED_TYPES = new Set(['short_text', 'paragraph']);
+const ALLOWED_TYPES = new Set([
+    'short_text',
+    'paragraph',
+    'multiple_choice',
+    'checkboxes',
+    'dropdown',
+]);
+const CHOICE_TYPES = new Set(['multiple_choice', 'checkboxes', 'dropdown']);
 const UUID_REGEX =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
 const isValidUuid = (value) => typeof value === 'string' && UUID_REGEX.test(value);
+
+export const isChoiceType = (value) => CHOICE_TYPES.has(value);
+
+const createDefaultOptions = () => ['Option 1', 'Option 2'];
+
+const normalizeOptions = (options) => {
+    if (!Array.isArray(options) || options.length === 0) {
+        return createDefaultOptions();
+    }
+
+    return options.map((option) => (typeof option === 'string' ? option : ''));
+};
 
 export const createDefaultSection = () => ({
     id: crypto.randomUUID(),
@@ -18,12 +37,50 @@ export const createSection = () => createDefaultSection();
 export const createQuestion = (type) => {
     const normalizedType = ALLOWED_TYPES.has(type) ? type : 'short_text';
 
-    return {
+    const question = {
         id: crypto.randomUUID(),
         type: normalizedType,
         label: 'Untitled question',
         required: false,
     };
+
+    if (isChoiceType(normalizedType)) {
+        question.options = createDefaultOptions();
+    }
+
+    return question;
+};
+
+export const addOption = (question) => {
+    const options = Array.isArray(question?.options) ? [...question.options] : [];
+    const nextLabel = `Option ${options.length + 1}`;
+    return [...options, nextLabel];
+};
+
+export const duplicateOption = (question, index) => {
+    const options = Array.isArray(question?.options) ? [...question.options] : [];
+
+    if (index < 0 || index >= options.length) {
+        return options;
+    }
+
+    options.splice(index + 1, 0, options[index]);
+    return options;
+};
+
+export const removeOption = (question, index) => {
+    const options = Array.isArray(question?.options) ? [...question.options] : [];
+
+    if (options.length <= 1) {
+        return options;
+    }
+
+    if (index < 0 || index >= options.length) {
+        return options;
+    }
+
+    options.splice(index, 1);
+    return options;
 };
 
 const ensureUniqueId = (value, usedIds) => {
@@ -52,12 +109,22 @@ const normalizeQuestion = (question, usedQuestionIds) => {
     const label = isNonEmptyString(question.label) ? question.label : 'Untitled question';
     const required = typeof question.required === 'boolean' ? question.required : false;
 
-    return {
+    const normalizedQuestion = {
         id,
         type,
         label,
         required,
     };
+
+    if (isChoiceType(type)) {
+        normalizedQuestion.options = normalizeOptions(question.options);
+    } else if (Array.isArray(question.options) && question.options.length > 0) {
+        normalizedQuestion.options = question.options.map((option) =>
+            typeof option === 'string' ? option : ''
+        );
+    }
+
+    return normalizedQuestion;
 };
 
 const normalizeSection = (section, usedSectionIds, usedQuestionIds) => {

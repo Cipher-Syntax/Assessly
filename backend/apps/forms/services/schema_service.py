@@ -5,6 +5,9 @@ from rest_framework import serializers
 ALLOWED_QUESTION_TYPES = {
     "short_text",
     "paragraph",
+    "multiple_choice",
+    "checkboxes",
+    "dropdown",
 }
 CHOICE_TYPES = {"multiple_choice", "checkboxes", "dropdown"}
 

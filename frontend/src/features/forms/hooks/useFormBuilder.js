@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createQuestion, createSection, moveQuestion } from '../utils/schemaHelpers';
+import {
+    createQuestion,
+    createSection,
+    isChoiceType,
+    moveQuestion,
+} from '../utils/schemaHelpers';
 import { fetchForm, saveDraft } from '../services/formService';
 
 const SAVE_DELAY_MS = 800;
@@ -23,13 +28,53 @@ const createValidationErrors = (title, sections) => {
         }
 
         section.questions.forEach((question) => {
+            const questionErrors = { label: '', optionsList: '', options: {} };
+
             if (!isNonEmptyString(question.label)) {
-                errors.questions[question.id] = 'Question label is required.';
+                questionErrors.label = 'Question label is required.';
+            }
+
+            if (isChoiceType(question.type)) {
+                const options = Array.isArray(question.options) ? question.options : [];
+
+                if (options.length === 0) {
+                    questionErrors.optionsList = 'At least one option is required.';
+                }
+
+                options.forEach((option, index) => {
+                    if (!isNonEmptyString(option)) {
+                        questionErrors.options[index] = 'Option label is required.';
+                    }
+                });
+            }
+
+            if (
+                questionErrors.label ||
+                questionErrors.optionsList ||
+                Object.keys(questionErrors.options).length > 0
+            ) {
+                errors.questions[question.id] = questionErrors;
             }
         });
     });
 
     return errors;
+};
+
+const hasQuestionErrors = (questionError) => {
+    if (!questionError) {
+        return false;
+    }
+
+    if (typeof questionError === 'string') {
+        return Boolean(questionError);
+    }
+
+    if (questionError.label || questionError.optionsList) {
+        return true;
+    }
+
+    return Boolean(questionError.options && Object.keys(questionError.options).length > 0);
 };
 
 const hasValidationErrors = (errors) => {
@@ -41,7 +86,7 @@ const hasValidationErrors = (errors) => {
         return true;
     }
 
-    return Object.keys(errors.questions).length > 0;
+    return Object.values(errors.questions).some(hasQuestionErrors);
 };
 
 const useFormBuilder = ({ formId }) => {
