@@ -5,9 +5,6 @@ from rest_framework import serializers
 ALLOWED_QUESTION_TYPES = {
     "short_text",
     "paragraph",
-    "multiple_choice",
-    "checkboxes",
-    "dropdown",
 }
 CHOICE_TYPES = {"multiple_choice", "checkboxes", "dropdown"}
 
@@ -36,6 +33,8 @@ def validate_schema(schema):
         errors["sections"] = ["Must be a list."]
     else:
         section_errors = []
+        section_ids = set()
+        question_ids = set()
         for section in sections:
             section_error = {}
             if not isinstance(section, dict):
@@ -47,6 +46,10 @@ def validate_schema(schema):
                 section_error["id"] = "This field is required."
             elif not _is_valid_uuid(section_id):
                 section_error["id"] = "Must be a valid UUID."
+            elif section_id in section_ids:
+                section_error["id"] = "Section id must be unique."
+            else:
+                section_ids.add(section_id)
 
             title = section.get("title")
             if title is None:
@@ -80,6 +83,10 @@ def validate_schema(schema):
                         question_error["id"] = "This field is required."
                     elif not _is_valid_uuid(question_id):
                         question_error["id"] = "Must be a valid UUID."
+                    elif question_id in question_ids:
+                        question_error["id"] = "Question id must be unique."
+                    else:
+                        question_ids.add(question_id)
 
                     question_type = question.get("type")
                     if question_type is None:

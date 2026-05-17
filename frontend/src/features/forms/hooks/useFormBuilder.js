@@ -1,33 +1,32 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createDefaultSection, createQuestion } from '../utils/schemaHelpers';
+import { createQuestion, createSection, moveQuestion } from '../utils/schemaHelpers';
 import { fetchForm, saveDraft } from '../services/formService';
 
 const SAVE_DELAY_MS = 800;
 
 const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
 
-const buildDraftSchema = (section, questions) => ({
-    sections: [
-        {
-            id: section.id,
-            title: section.title,
-            description: section.description,
-            questions,
-        },
-    ],
+const buildDraftSchema = (sections) => ({
+    sections,
 });
 
-const createValidationErrors = (title, questions) => {
-    const errors = { title: '', questions: {} };
+const createValidationErrors = (title, sections) => {
+    const errors = { title: '', sections: {}, questions: {} };
 
     if (!isNonEmptyString(title)) {
         errors.title = 'Title is required.';
     }
 
-    questions.forEach((question) => {
-        if (!isNonEmptyString(question.label)) {
-            errors.questions[question.id] = 'Question label is required.';
+    sections.forEach((section) => {
+        if (!isNonEmptyString(section.title)) {
+            errors.sections[section.id] = 'Section title is required.';
         }
+
+        section.questions.forEach((question) => {
+            if (!isNonEmptyString(question.label)) {
+                errors.questions[question.id] = 'Question label is required.';
+            }
+        });
     });
 
     return errors;
@@ -37,6 +36,11 @@ const hasValidationErrors = (errors) => {
     if (errors.title) {
         return true;
     }
+
+    if (Object.keys(errors.sections).length > 0) {
+        return true;
+    }
+
     return Object.keys(errors.questions).length > 0;
 };
 
@@ -45,8 +49,7 @@ const useFormBuilder = ({ formId }) => {
     const [loadError, setLoadError] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [section, setSection] = useState(createDefaultSection());
-    const [questions, setQuestions] = useState([]);
+    const [sections, setSections] = useState([createSection()]);
     const [isSaving, setIsSaving] = useState(false);
     const [lastSavedAt, setLastSavedAt] = useState(null);
     const [saveError, setSaveError] = useState('');
@@ -86,17 +89,15 @@ const useFormBuilder = ({ formId }) => {
                 return;
             }
 
-            const [firstSection] = form.draftSchema.sections;
-            const normalizedSection = firstSection || createDefaultSection();
+            const normalizedSections = Array.isArray(form.draftSchema.sections)
+                ? form.draftSchema.sections
+                : [createSection()];
 
             setTitle(form.title || '');
             setDescription(form.description || '');
-            setSection({
-                id: normalizedSection.id,
-                title: normalizedSection.title,
-                description: normalizedSection.description,
-            });
-            setQuestions(normalizedSection.questions);
+            setSections(
+                normalizedSections.length > 0 ? normalizedSections : [createSection()]
+            );
             setLoadError('');
             setSaveError('');
             setStatus('ready');
@@ -111,8 +112,8 @@ const useFormBuilder = ({ formId }) => {
     }, [formId]);
 
     const validationErrors = useMemo(
-        () => createValidationErrors(title, questions),
-        [title, questions]
+        () => createValidationErrors(title, sections),
+        [title, sections]
     );
 
     const canSave = !hasValidationErrors(validationErrors);
@@ -136,7 +137,7 @@ const useFormBuilder = ({ formId }) => {
             setIsSaving(true);
             setSaveError('');
 
-            const draftSchema = buildDraftSchema(section, questions);
+            const draftSchema = buildDraftSchema(sections);
             const { error } = await saveDraft({
                 id: formId,
                 title,
@@ -159,30 +160,117 @@ const useFormBuilder = ({ formId }) => {
         }, SAVE_DELAY_MS);
 
         return () => clearTimeout(timeoutId);
-    }, [status, canSave, formId, title, description, questions, section]);
+    }, [status, canSave, formId, title, description, sections]);
 
-    const updateQuestion = useCallback((id, updates) => {
-        setQuestions((prev) =>
-            prev.map((question) =>
-                question.id === id ? { ...question, ...updates } : question
+    const addSection = useCallback(() => {
+        setSections((prev) => [...prev, createSection()]);
+    }, []);
+
+    const updateSection = useCallback((id, patch) => {
+        setSections((prev) =>
+            prev.map((section) => (section.id === id ? { ...section, ...patch } : section))
+        );
+    }, []);
+
+    const deleteSection = useCallback((id) => {
+        setSections((prev) => {
+            if (prev.length <= 1) {
+                return prev;
+            }
+
+            return prev.filter((section) => section.id !== id);
+        });
+    }, []);
+
+    const duplicateSection = useCallback((id) => {
+        setSections((prev) => {
+            const index = prev.findIndex((section) => section.id === id);
+
+            if (index === -1) {
+                return prev;
+            }
+
+            const source = prev[index];
+            const duplicatedQuestions = source.questions.map((question) => ({
+                ...question,
+                id: crypto.randomUUID(),
+            }));
+
+            const duplicatedSection = {
+                ...source,
+                id: crypto.randomUUID(),
+                questions: duplicatedQuestions,
+            };
+
+            const next = [...prev];
+            next.splice(index + 1, 0, duplicatedSection);
+            return next;
+        });
+    }, []);
+
+    const addQuestion = useCallback((sectionId, type) => {
+        setSections((prev) =>
+            prev.map((section) =>
+                section.id === sectionId
+                    ? { ...section, questions: [...section.questions, createQuestion(type)] }
+                    : section
             )
         );
     }, []);
 
-    const deleteQuestion = useCallback((id) => {
-        setQuestions((prev) => prev.filter((question) => question.id !== id));
+    const updateQuestion = useCallback((sectionId, questionId, patch) => {
+        setSections((prev) =>
+            prev.map((section) => {
+                if (section.id !== sectionId) {
+                    return section;
+                }
+
+                return {
+                    ...section,
+                    questions: section.questions.map((question) =>
+                        question.id === questionId ? { ...question, ...patch } : question
+                    ),
+                };
+            })
+        );
     }, []);
 
-    const addQuestion = useCallback((type) => {
-        setQuestions((prev) => [...prev, createQuestion(type)]);
+    const deleteQuestion = useCallback((sectionId, questionId) => {
+        setSections((prev) =>
+            prev.map((section) =>
+                section.id === sectionId
+                    ? {
+                          ...section,
+                          questions: section.questions.filter(
+                              (question) => question.id !== questionId
+                          ),
+                      }
+                    : section
+            )
+        );
     }, []);
+
+    const moveQuestionAction = useCallback(
+        (sourceSectionId, targetSectionId, questionId, targetIndex) => {
+            setSections((prev) =>
+                moveQuestion(
+                    { sections: prev },
+                    sourceSectionId,
+                    targetSectionId,
+                    questionId,
+                    targetIndex
+                ).sections
+            );
+        },
+        []
+    );
 
     return {
         status,
         loadError,
         title,
         description,
-        questions,
+        sections,
         isSaving,
         lastSavedAt,
         saveError,
@@ -190,9 +278,14 @@ const useFormBuilder = ({ formId }) => {
         actions: {
             setTitle,
             setDescription,
+            addSection,
+            updateSection,
+            deleteSection,
+            duplicateSection,
             updateQuestion,
             deleteQuestion,
             addQuestion,
+            moveQuestion: moveQuestionAction,
         },
     };
 };
