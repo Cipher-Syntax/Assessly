@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes as RouterRoutes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AuthForm from '../features/auth/AuthForm';
 import ProtectedRoute from '../features/auth/components/ProtectedRoute';
 import LandingPage from '../features/landing/LandingPage';
@@ -9,7 +9,7 @@ import PublicFormPage from '../features/forms/PublicFormPage';
 const AppRoutes = () => {
     return (
         <BrowserRouter>
-            <RouterRoutes>
+            <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<AuthForm mode="login" />} />
                 <Route path="/register" element={<AuthForm mode="register" />} />
@@ -18,7 +18,7 @@ const AppRoutes = () => {
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/forms/:id/builder" element={<FormBuilderPage />} />
                 </Route>
-            </RouterRoutes>
+            </Routes>
         </BrowserRouter>
     );
 };
