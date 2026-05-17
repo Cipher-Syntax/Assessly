@@ -11,8 +11,18 @@ const normalizeQuestion = (question, index) => {
     const id = question.id ?? `question-${index}`;
     const type = typeof question.type === 'string' ? question.type : 'short_text';
     const label = isNonEmptyString(question.label) ? question.label : `Question ${index + 1}`;
+    const required = typeof question.required === 'boolean' ? question.required : false;
+    const options = Array.isArray(question.options)
+        ? question.options.filter((option) => typeof option === 'string')
+        : [];
 
-    return { id, type, label };
+    return {
+        id,
+        type,
+        label,
+        required,
+        options,
+    };
 };
 
 const normalizeSection = (section, index) => {
