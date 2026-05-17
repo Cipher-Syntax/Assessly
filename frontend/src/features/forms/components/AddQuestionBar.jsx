@@ -15,6 +15,27 @@ const AddQuestionBar = ({ onAdd }) => {
             >
                 Add paragraph
             </button>
+            <button
+                type="button"
+                onClick={() => onAdd('multiple_choice')}
+                className="inline-flex items-center justify-center rounded-lg border border-default bg-tertiary px-4 py-2 text-sm font-semibold text-secondary transition hover:text-primary"
+            >
+                Add multiple choice
+            </button>
+            <button
+                type="button"
+                onClick={() => onAdd('checkboxes')}
+                className="inline-flex items-center justify-center rounded-lg border border-default bg-tertiary px-4 py-2 text-sm font-semibold text-secondary transition hover:text-primary"
+            >
+                Add checkboxes
+            </button>
+            <button
+                type="button"
+                onClick={() => onAdd('dropdown')}
+                className="inline-flex items-center justify-center rounded-lg border border-default bg-tertiary px-4 py-2 text-sm font-semibold text-secondary transition hover:text-primary"
+            >
+                Add dropdown
+            </button>
         </div>
     );
 };
