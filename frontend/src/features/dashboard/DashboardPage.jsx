@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from './components/DashboardLayout';
 import EmptyState from './components/EmptyState';
-import { fetchOwnedForms } from './services/formService';
+import { createForm, fetchOwnedForms } from './services/formService';
 
 const formatUpdatedAt = (value) => {
     if (!value) {
@@ -24,12 +24,16 @@ const formatUpdatedAt = (value) => {
 
 const DashboardPage = () => {
     const navigate = useNavigate();
+    const isMountedRef = useRef(true);
     const [status, setStatus] = useState('loading');
     const [forms, setForms] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
+    const [createError, setCreateError] = useState('');
 
     useEffect(() => {
         let isMounted = true;
+        isMountedRef.current = true;
 
         const loadForms = async () => {
             setStatus('loading');
@@ -55,11 +59,31 @@ const DashboardPage = () => {
 
         return () => {
             isMounted = false;
+            isMountedRef.current = false;
         };
     }, []);
 
-    const handleCreate = () => {
-        navigate('/forms/new');
+    const handleCreate = async () => {
+        if (isCreating) {
+            return;
+        }
+
+        setIsCreating(true);
+        setCreateError('');
+
+        const { form, error } = await createForm();
+
+        if (!isMountedRef.current) {
+            return;
+        }
+
+        if (error || !form) {
+            setCreateError(error || 'Unable to create a form right now.');
+            setIsCreating(false);
+            return;
+        }
+
+        navigate(`/forms/${form.id}/builder`, { state: { formTitle: form.title } });
     };
 
     return (
@@ -83,7 +107,11 @@ const DashboardPage = () => {
                 )}
 
                 {status === 'ready' && forms.length === 0 && (
-                    <EmptyState onCreate={handleCreate} />
+                    <EmptyState
+                        onCreate={handleCreate}
+                        isCreating={isCreating}
+                        errorMessage={createError}
+                    />
                 )}
 
                 {status === 'ready' && forms.length > 0 && (

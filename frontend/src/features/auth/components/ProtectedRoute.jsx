@@ -3,7 +3,7 @@ import useAuthStatus from '../hooks/useAuthStatus';
 
 const LoadingScreen = () => {
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-muted)] flex items-center justify-center">
+        <div className="min-h-screen bg-(--bg-primary) text-(--text-muted) flex items-center justify-center">
             <p className="text-sm">Checking access...</p>
         </div>
     );
