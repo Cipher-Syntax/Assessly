@@ -3,7 +3,7 @@ import AuthForm from '../features/auth/AuthForm';
 import ProtectedRoute from '../features/auth/components/ProtectedRoute';
 import LandingPage from '../features/landing/LandingPage';
 import DashboardPage from '../features/dashboard/DashboardPage';
-import FormBuilderPlaceholder from '../features/forms/FormBuilderPlaceholder';
+import FormBuilderPage from '../features/forms/FormBuilderPage';
 
 const AppRoutes = () => {
     return (
@@ -14,7 +14,7 @@ const AppRoutes = () => {
                 <Route path="/register" element={<AuthForm mode="register" />} />
                 <Route element={<ProtectedRoute />}>
                     <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/forms/id:/builder" element={<FormBuilderPlaceholder />} />
+                    <Route path="/forms/:id/builder" element={<FormBuilderPage />} />
                 </Route>
             </RouterRoutes>
         </BrowserRouter>
