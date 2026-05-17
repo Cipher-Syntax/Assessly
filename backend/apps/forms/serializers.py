@@ -92,3 +92,16 @@ class PublishSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     version = serializers.IntegerField(read_only=True)
     published_at = serializers.DateTimeField(read_only=True)
+
+
+class FormPublicSerializer(serializers.ModelSerializer):
+    published_schema = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Form
+        fields = ["id", "title", "description", "published_schema"]
+
+    def get_published_schema(self, obj):
+        if not obj.published_version:
+            return None
+        return obj.published_version.schema

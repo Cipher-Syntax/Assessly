@@ -1,9 +1,10 @@
 from django.db.models import Q
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
+from rest_framework.views import APIView
 
 from apps.forms.models import Form
 from apps.forms.permissions import FormAccessPermission, FormOwnerPermission, get_editor_form_ids
@@ -11,10 +12,13 @@ from apps.forms.serializers import (
     FormCreateSerializer,
     FormDetailSerializer,
     FormListSerializer,
+    FormPublicSerializer,
     FormUpdateSerializer,
     PublishSerializer,
 )
 from apps.forms.services import form_service
+from apps.permissions.models import FormAccessSettings, FormAccessToken
+from apps.permissions.services import token_service
 
 
 class FormViewSet(viewsets.ModelViewSet):
@@ -71,4 +75,60 @@ class FormViewSet(viewsets.ModelViewSet):
         form = self.get_object()
         published = form_service.publish_form(form, request.user)
         serializer = PublishSerializer(published)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FormPublicView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, form_id):
+        form = get_object_or_404(
+            Form.objects.select_related("published_version"),
+            pk=form_id,
+        )
+
+        if not form.published_version_id:
+            return Response(
+                {"detail": "Published form not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        access_settings, _created = FormAccessSettings.objects.get_or_create(form=form)
+        access_mode = access_settings.responder_access_mode
+        user = getattr(request, "user", None)
+        token = request.query_params.get("token")
+
+        if access_mode == FormAccessSettings.ResponderAccessMode.RESTRICTED:
+            if not user or not user.is_authenticated:
+                return Response(
+                    {"detail": "Authentication required."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        elif access_mode == FormAccessSettings.ResponderAccessMode.LINK:
+            if not (user and user.is_authenticated):
+                if not token:
+                    return Response(
+                        {"detail": "Valid access token required."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+                is_valid = token_service.validate_token(
+                    form,
+                    scope=FormAccessToken.Scope.RESPONDER,
+                    token=token,
+                )
+                if not is_valid:
+                    return Response(
+                        {"detail": "Invalid or expired access token."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+        elif access_mode == FormAccessSettings.ResponderAccessMode.PUBLIC:
+            pass
+        else:
+            if not user or not user.is_authenticated:
+                return Response(
+                    {"detail": "Authentication required."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        serializer = FormPublicSerializer(form)
         return Response(serializer.data, status=status.HTTP_200_OK)
