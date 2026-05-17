@@ -5,6 +5,25 @@ const isRecord = (value) => value !== null && typeof value === 'object' && !Arra
 
 const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
 
+const normalizePublishedVersion = (payload) => {
+    if (!isRecord(payload)) {
+        return null;
+    }
+
+    const id = payload.id;
+
+    if (id === undefined || id === null) {
+        return null;
+    }
+
+    const version = typeof payload.version === 'number' ? payload.version : null;
+    const publishedAt = isNonEmptyString(payload.published_at)
+        ? payload.published_at
+        : null;
+
+    return { id, version, publishedAt };
+};
+
 const normalizeFormDetail = (payload) => {
     if (!isRecord(payload)) {
         return null;
@@ -20,12 +39,14 @@ const normalizeFormDetail = (payload) => {
     const description = typeof payload.description === 'string' ? payload.description : '';
 
     const draftSchema = normalizeSchema(payload.draft_schema);
+    const publishedVersion = normalizePublishedVersion(payload.published_version);
 
     return {
         id,
         title,
         description,
         draftSchema,
+        publishedVersion,
     };
 };
 
@@ -80,6 +101,31 @@ export const saveDraft = async ({ id, title, description, draftSchema }) => {
         return {
             form: null,
             error: 'Unable to save changes right now.',
+        };
+    }
+};
+
+export const publishForm = async (id) => {
+    if (!id) {
+        return { published: null, error: 'Missing form id.' };
+    }
+
+    try {
+        const response = await api.post(`/api/forms/${id}/publish/`);
+        const published = normalizePublishedVersion(response?.data);
+
+        if (!published) {
+            return {
+                published: null,
+                error: 'Unexpected response while publishing the form.',
+            };
+        }
+
+        return { published, error: null };
+    } catch {
+        return {
+            published: null,
+            error: 'Unable to publish the form right now.',
         };
     }
 };

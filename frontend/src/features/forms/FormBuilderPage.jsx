@@ -20,13 +20,17 @@ const FormBuilderPage = () => {
         title,
         description,
         sections,
+        publishedVersion,
+        isEditingDraft,
         isSaving,
+        isPublishing,
         saveError,
         validationErrors,
         actions,
     } = useFormBuilder({ formId: id });
 
     const [activeQuestionId, setActiveQuestionId] = useState(null);
+    const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -52,6 +56,9 @@ const FormBuilderPage = () => {
     }, [activeQuestionId, sections]);
 
     const handleDragStart = (event) => {
+        if (!isEditingDraft || isPublishing) {
+            return;
+        }
         setActiveQuestionId(event.active?.id ?? null);
     };
 
@@ -60,6 +67,10 @@ const FormBuilderPage = () => {
     };
 
     const handleDragEnd = (event) => {
+        if (!isEditingDraft || isPublishing) {
+            setActiveQuestionId(null);
+            return;
+        }
         const { active, over } = event;
         setActiveQuestionId(null);
 
@@ -131,7 +142,15 @@ const FormBuilderPage = () => {
         );
     }
 
-    const statusLabel = isSaving ? 'Saving...' : 'Saved';
+    const statusLabel = !isEditingDraft
+        ? 'Draft locked'
+        : isPublishing
+            ? 'Publishing...'
+            : isSaving
+                ? 'Saving...'
+                : 'Saved';
+    const isReadOnly = !isEditingDraft || isPublishing;
+    const showPublished = Boolean(publishedVersion);
 
     return (
         <DndContext
@@ -146,10 +165,43 @@ const FormBuilderPage = () => {
                     <div className="flex flex-col gap-6">
                         <section className="rounded-xl border border-default bg-secondary p-6">
                             <div className="flex flex-col gap-4">
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-wrap items-center justify-between gap-4">
                                     <label className="text-xs text-secondary">
                                         Form title
                                     </label>
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        {showPublished && (
+                                            <span className="rounded-full border border-default bg-tertiary px-3 py-1 text-xs text-secondary">
+                                                Published
+                                            </span>
+                                        )}
+                                        {showPublished && (
+                                            <button
+                                                type="button"
+                                                onClick={actions.editDraft}
+                                                disabled={isEditingDraft || isPublishing}
+                                                className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${isEditingDraft || isPublishing
+                                                    ? 'text-muted opacity-60 cursor-not-allowed'
+                                                    : 'bg-tertiary text-secondary hover:text-primary'
+                                                    }`}
+                                            >
+                                                Edit draft
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsPublishConfirmOpen(true)}
+                                            disabled={isReadOnly}
+                                            className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${isReadOnly
+                                                ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
+                                                : 'bg-primary-500 text-primary hover:bg-primary-600'
+                                                }`}
+                                        >
+                                            Publish
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
                                     <input
                                         type="text"
                                         value={title}
@@ -157,7 +209,8 @@ const FormBuilderPage = () => {
                                             actions.setTitle(event.target.value)
                                         }
                                         placeholder="Untitled form"
-                                        className="w-full rounded-lg border border-default bg-tertiary px-3 py-2 text-base text-primary placeholder:text-muted focus:border-focus focus:outline-none"
+                                        disabled={isReadOnly}
+                                        className="w-full rounded-lg border border-default bg-tertiary px-3 py-2 text-base text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                                     />
                                     {validationErrors.title && (
                                         <p className="text-xs text-danger">
@@ -176,7 +229,8 @@ const FormBuilderPage = () => {
                                         }
                                         placeholder="Describe what this form collects"
                                         rows={3}
-                                        className="w-full resize-none rounded-lg border border-default bg-tertiary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none"
+                                        disabled={isReadOnly}
+                                        className="w-full resize-none rounded-lg border border-default bg-tertiary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                                     />
                                 </div>
                                 <div className="text-xs text-secondary">
@@ -200,7 +254,8 @@ const FormBuilderPage = () => {
                                     questionErrors={validationErrors.questions}
                                     sections={sections}
                                     canDelete={sections.length > 1}
-                                    isDragDisabled={isSaving}
+                                    isDragDisabled={isSaving || isReadOnly}
+                                    isEditing={!isReadOnly}
                                     onUpdateSection={actions.updateSection}
                                     onDuplicateSection={actions.duplicateSection}
                                     onDeleteSection={actions.deleteSection}
@@ -215,13 +270,51 @@ const FormBuilderPage = () => {
                         <button
                             type="button"
                             onClick={actions.addSection}
-                            className="w-full rounded-lg border border-default bg-tertiary px-4 py-3 text-sm font-semibold text-secondary transition hover:text-primary"
+                            disabled={isReadOnly}
+                            className={`w-full rounded-lg border border-default px-4 py-3 text-sm font-semibold transition ${isReadOnly
+                                ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
+                                : 'bg-tertiary text-secondary hover:text-primary'
+                                }`}
                         >
                             Add section
                         </button>
                     </div>
                 </div>
             </div>
+            {isPublishConfirmOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                    <div className="w-full max-w-md rounded-xl border border-default bg-secondary p-6 shadow-lg">
+                        <h2 className="text-lg font-semibold text-primary">Publish form?</h2>
+                        <p className="mt-2 text-sm text-secondary">
+                            Publishing locks the current draft into a versioned snapshot. You
+                            can edit a new draft afterward.
+                        </p>
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsPublishConfirmOpen(false)}
+                                className="rounded-lg border border-default bg-tertiary px-4 py-2 text-sm font-semibold text-secondary transition hover:text-primary"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsPublishConfirmOpen(false);
+                                    actions.publishForm();
+                                }}
+                                disabled={isPublishing}
+                                className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${isPublishing
+                                    ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
+                                    : 'bg-primary-500 text-primary hover:bg-primary-600'
+                                    }`}
+                            >
+                                Publish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <DragOverlay>
                 {activeQuestion ? (
                     <QuestionCardPreview question={activeQuestion} />
