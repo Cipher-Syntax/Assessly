@@ -17,6 +17,7 @@ class ResponseDraftSerializer(serializers.Serializer):
                 "updated_at": instance.updated_at,
                 "form_version_id": instance.form_version_id,
                 "session_id": instance.session_id,
+                "session_uuid": instance.session.session_uuid if instance.session_id else None,
             }
         return super().to_representation(instance)
 

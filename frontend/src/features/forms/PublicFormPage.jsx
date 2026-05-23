@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import useAuthStatus from '../auth/hooks/useAuthStatus';
 import PublicSection from './components/PublicSection';
+import { fetchDraft, saveDraft } from './services/draftService';
 import { fetchPublicForm } from './services/publicFormService';
 import { submitResponse } from './services/responseService';
 
@@ -24,6 +26,51 @@ const flattenQuestions = (sections) => {
     return sections.flatMap((section) =>
         Array.isArray(section?.questions) ? section.questions : []
     );
+};
+
+const getDraftSessionKey = (formId) =>
+    formId ? `draftSession:${formId}` : null;
+
+const readDraftSession = (formId) => {
+    const key = getDraftSessionKey(formId);
+
+    if (!key) {
+        return null;
+    }
+
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) {
+            return null;
+        }
+        const parsed = JSON.parse(raw);
+        const sessionUuid =
+            parsed?.sessionUuid && typeof parsed.sessionUuid === 'string'
+                ? parsed.sessionUuid
+                : null;
+        const sessionId =
+            parsed?.sessionId !== undefined && parsed?.sessionId !== null
+                ? parsed.sessionId
+                : null;
+        return sessionUuid ? { sessionUuid, sessionId } : null;
+    } catch {
+        return null;
+    }
+};
+
+const writeDraftSession = (formId, sessionUuid, sessionId) => {
+    const key = getDraftSessionKey(formId);
+
+    if (!key || !sessionUuid) {
+        return;
+    }
+
+    const payload = {
+        sessionUuid,
+        sessionId: sessionId ?? null,
+    };
+
+    localStorage.setItem(key, JSON.stringify(payload));
 };
 
 const validateClientAnswers = (questions, answers) => {
@@ -91,6 +138,8 @@ const PublicFormPage = () => {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token') || '';
+    const authState = useAuthStatus();
+    const isAuthenticated = authState.status === 'authenticated';
 
     const [status, setStatus] = useState('loading');
     const [form, setForm] = useState(null);
@@ -101,7 +150,18 @@ const PublicFormPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [submission, setSubmission] = useState(null);
-    const [sessionUuid, setSessionUuid] = useState(() => crypto.randomUUID());
+    const [sessionUuid, setSessionUuid] = useState(() => {
+        const stored = readDraftSession(id);
+        return stored?.sessionUuid || crypto.randomUUID();
+    });
+    const [sessionId, setSessionId] = useState(() => {
+        const stored = readDraftSession(id);
+        return stored?.sessionId ?? null;
+    });
+    const [resumeBannerVisible, setResumeBannerVisible] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [lastSavedAt, setLastSavedAt] = useState(null);
+    const [saveError, setSaveError] = useState('');
 
     const sections = form?.publishedSchema?.sections || [];
     const questions = useMemo(() => flattenQuestions(sections), [sections]);
@@ -117,6 +177,10 @@ const PublicFormPage = () => {
             setIsSubmitted(false);
             setSubmission(null);
             setAnswers({});
+            setResumeBannerVisible(false);
+            setIsSaving(false);
+            setLastSavedAt(null);
+            setSaveError('');
 
             const { form: publicForm, error: loadError } = await fetchPublicForm({
                 id,
@@ -145,8 +209,132 @@ const PublicFormPage = () => {
     }, [id, token]);
 
     useEffect(() => {
-        setSessionUuid(crypto.randomUUID());
+        const stored = readDraftSession(id);
+        if (stored?.sessionUuid) {
+            setSessionUuid(stored.sessionUuid);
+            setSessionId(stored.sessionId ?? null);
+        } else {
+            setSessionUuid(crypto.randomUUID());
+            setSessionId(null);
+        }
     }, [id, token]);
+
+    useEffect(() => {
+        if (!isAuthenticated || !form?.id) {
+            return undefined;
+        }
+
+        let isActive = true;
+
+        const loadDraft = async () => {
+            const { draft, error: draftError, status: draftStatus } = await fetchDraft({
+                formId: form.id,
+                token,
+            });
+
+            if (!isActive) {
+                return;
+            }
+
+            if (draftStatus === 404) {
+                const nextSessionUuid = crypto.randomUUID();
+                setSessionUuid(nextSessionUuid);
+                setSessionId(null);
+                setAnswers({});
+                setResumeBannerVisible(false);
+                setLastSavedAt(null);
+                setSaveError('');
+                writeDraftSession(form.id, nextSessionUuid, null);
+                return;
+            }
+
+            if (draftError) {
+                setSaveError(draftError);
+                return;
+            }
+
+            if (draft) {
+                setAnswers(draft.answers || {});
+                setSessionUuid((prev) => draft.session_uuid || prev || crypto.randomUUID());
+                setSessionId(draft.session_id ?? null);
+                setResumeBannerVisible(true);
+                setLastSavedAt(draft.updated_at || null);
+                setSaveError('');
+                if (draft.session_uuid) {
+                    writeDraftSession(form.id, draft.session_uuid, draft.session_id ?? null);
+                }
+            }
+        };
+
+        loadDraft();
+
+        return () => {
+            isActive = false;
+        };
+    }, [form?.id, isAuthenticated, token]);
+
+    useEffect(() => {
+        if (!isAuthenticated || !form?.id) {
+            return undefined;
+        }
+
+        if (isSubmitted || isSubmitting) {
+            return undefined;
+        }
+
+        let isActive = true;
+
+        const timeoutId = setTimeout(async () => {
+            if (!isAuthenticated || !form?.id || !sessionUuid) {
+                return;
+            }
+
+            setIsSaving(true);
+
+            const { draft, error: saveMessage } = await saveDraft({
+                formId: form.id,
+                answers,
+                sessionUuid,
+                sessionId,
+                token,
+            });
+
+            if (!isActive) {
+                return;
+            }
+
+            if (saveMessage) {
+                setSaveError(saveMessage);
+            } else {
+                setSaveError('');
+            }
+
+            if (draft) {
+                if (draft.session_uuid) {
+                    setSessionUuid(draft.session_uuid);
+                }
+                setSessionId(draft.session_id ?? null);
+                writeDraftSession(form.id, draft.session_uuid || sessionUuid, draft.session_id ?? null);
+                setLastSavedAt(draft.updated_at || new Date().toISOString());
+            }
+
+            setIsSaving(false);
+        }, 800);
+
+        return () => {
+            isActive = false;
+            clearTimeout(timeoutId);
+        };
+    }, [
+        answers,
+        form?.id,
+        isAuthenticated,
+        isSubmitted,
+        isSubmitting,
+        sessionId,
+        sessionUuid,
+        token,
+    ]);
 
     const handleAnswerChange = (questionId, value) => {
         if (!questionId) {
@@ -266,6 +454,11 @@ const PublicFormPage = () => {
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                        {resumeBannerVisible && (
+                            <div className="rounded-lg border border-default bg-secondary px-4 py-2 text-sm text-secondary">
+                                Resumed your draft
+                            </div>
+                        )}
                         {sections.map((section, index) => (
                             <PublicSection
                                 key={section.id || `section-${index}`}
@@ -292,6 +485,13 @@ const PublicFormPage = () => {
                             >
                                 {isSubmitting ? 'Submitting...' : 'Submit'}
                             </button>
+                            {isAuthenticated && (
+                                <div className="mt-2 text-xs text-secondary">
+                                    {isSaving && 'Saving...'}
+                                    {!isSaving && saveError && saveError}
+                                    {!isSaving && !saveError && lastSavedAt && 'Draft saved'}
+                                </div>
+                            )}
                         </div>
                     </form>
                 )}
