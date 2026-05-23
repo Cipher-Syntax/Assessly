@@ -39,3 +39,8 @@ class AccessTokenListSerializer(serializers.ModelSerializer):
             "created_at",
             "last_used_at",
         ]
+
+
+class UserLookupSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    email = serializers.EmailField()

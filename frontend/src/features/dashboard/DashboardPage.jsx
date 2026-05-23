@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from './components/DashboardLayout';
 import EmptyState from './components/EmptyState';
 import { createForm, fetchOwnedForms } from './services/formService';
+import ShareModal from '../permissions/components/ShareModal';
 
 const formatUpdatedAt = (value) => {
     if (!value) {
@@ -30,6 +31,7 @@ const DashboardPage = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const [createError, setCreateError] = useState('');
+    const [shareFormId, setShareFormId] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -121,17 +123,35 @@ const DashboardPage = () => {
                                 key={form.id}
                                 className="rounded-xl border border-default bg-secondary p-4"
                             >
-                                <h3 className="text-base font-semibold text-primary">
-                                    {form.title}
-                                </h3>
-                                <p className="mt-2 text-xs text-secondary">
-                                    {formatUpdatedAt(form.updated_at)}
-                                </p>
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h3 className="text-base font-semibold text-primary">
+                                            {form.title}
+                                        </h3>
+                                        <p className="mt-2 text-xs text-secondary">
+                                            {formatUpdatedAt(form.updated_at)}
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShareFormId(form.id)}
+                                        className="rounded-lg border border-default bg-tertiary px-3 py-1 text-xs font-semibold text-secondary transition hover:text-primary"
+                                    >
+                                        Share
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+            {shareFormId && (
+                <ShareModal
+                    formId={shareFormId}
+                    isOpen={Boolean(shareFormId)}
+                    onClose={() => setShareFormId(null)}
+                />
+            )}
         </DashboardLayout>
     );
 };
