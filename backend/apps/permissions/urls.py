@@ -9,6 +9,11 @@ urlpatterns = [
         name="permissions-settings",
     ),
     path(
+        "forms/<int:form_id>/lookup/",
+        views.UserLookupView.as_view(),
+        name="permissions-lookup",
+    ),
+    path(
         "forms/<int:form_id>/roles/",
         views.RoleListCreateView.as_view(),
         name="permissions-roles",

@@ -11,6 +11,7 @@ import {
 import SectionCard from './components/SectionCard';
 import { QuestionCardPreview } from './components/QuestionCard';
 import useFormBuilder from './hooks/useFormBuilder';
+import ShareModal from '../permissions/components/ShareModal';
 
 const FormBuilderPage = () => {
     const { id } = useParams();
@@ -31,6 +32,7 @@ const FormBuilderPage = () => {
 
     const [activeQuestionId, setActiveQuestionId] = useState(null);
     const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -190,6 +192,13 @@ const FormBuilderPage = () => {
                                         )}
                                         <button
                                             type="button"
+                                            onClick={() => setIsShareOpen(true)}
+                                            className="rounded-lg border border-default bg-tertiary px-3 py-1 text-xs font-semibold text-secondary transition hover:text-primary"
+                                        >
+                                            Share
+                                        </button>
+                                        <button
+                                            type="button"
                                             onClick={() => setIsPublishConfirmOpen(true)}
                                             disabled={isReadOnly}
                                             className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${isReadOnly
@@ -314,6 +323,13 @@ const FormBuilderPage = () => {
                         </div>
                     </div>
                 </div>
+            )}
+            {isShareOpen && (
+                <ShareModal
+                    formId={id}
+                    isOpen={isShareOpen}
+                    onClose={() => setIsShareOpen(false)}
+                />
             )}
             <DragOverlay>
                 {activeQuestion ? (
