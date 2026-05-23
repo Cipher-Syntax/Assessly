@@ -1,37 +1,39 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from './components/DashboardLayout';
+import DeleteFormModal from './components/DeleteFormModal';
 import EmptyState from './components/EmptyState';
-import { createForm, fetchOwnedForms } from './services/formService';
-import ShareModal from '../permissions/components/ShareModal';
+import FormCard from './components/FormCard';
+import RenameFormModal from './components/RenameFormModal';
+import {
+    createForm,
+    deleteForm,
+    fetchForms,
+    fetchResponseCount,
+    renameForm,
+} from './services/formService';
 
-const formatUpdatedAt = (value) => {
-    if (!value) {
-        return 'Updated recently';
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return 'Updated recently';
-    }
-
-    return `Updated ${date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    })}`;
-};
+const buildLoadingCountMap = (forms) =>
+    forms.reduce((counts, form) => {
+        counts[form.id] = { status: 'loading', count: null, error: null };
+        return counts;
+    }, {});
 
 const DashboardPage = () => {
     const navigate = useNavigate();
     const isMountedRef = useRef(true);
     const [status, setStatus] = useState('loading');
     const [forms, setForms] = useState([]);
+    const [responseCounts, setResponseCounts] = useState({});
     const [errorMessage, setErrorMessage] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const [createError, setCreateError] = useState('');
-    const [shareFormId, setShareFormId] = useState(null);
+    const [renameTarget, setRenameTarget] = useState(null);
+    const [isRenaming, setIsRenaming] = useState(false);
+    const [renameError, setRenameError] = useState('');
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -39,7 +41,10 @@ const DashboardPage = () => {
 
         const loadForms = async () => {
             setStatus('loading');
-            const { forms: ownedForms, error } = await fetchOwnedForms();
+            setErrorMessage('');
+            setResponseCounts({});
+
+            const { forms: ownedForms, error } = await fetchForms();
 
             if (!isMounted) {
                 return;
@@ -55,6 +60,35 @@ const DashboardPage = () => {
 
             setErrorMessage('');
             setStatus('ready');
+            setResponseCounts(buildLoadingCountMap(ownedForms));
+
+            if (ownedForms.length === 0) {
+                return;
+            }
+
+            const countEntries = await Promise.all(
+                ownedForms.map(async (form) => {
+                    const { count, error: countError } = await fetchResponseCount(form.id);
+
+                    return [
+                        form.id,
+                        {
+                            status: countError ? 'error' : 'ready',
+                            count: countError ? null : count,
+                            error: countError,
+                        },
+                    ];
+                })
+            );
+
+            if (!isMounted) {
+                return;
+            }
+
+            setResponseCounts((current) => ({
+                ...current,
+                ...Object.fromEntries(countEntries),
+            }));
         };
 
         loadForms();
@@ -64,6 +98,94 @@ const DashboardPage = () => {
             isMountedRef.current = false;
         };
     }, []);
+
+    const handleOpenRename = (form) => {
+        setRenameTarget(form);
+        setRenameError('');
+    };
+
+    const handleCloseRename = () => {
+        if (isRenaming) {
+            return;
+        }
+
+        setRenameTarget(null);
+        setRenameError('');
+    };
+
+    const handleRenameSubmit = async (title) => {
+        if (!renameTarget || isRenaming) {
+            return;
+        }
+
+        setIsRenaming(true);
+        setRenameError('');
+
+        const { form: renamedForm, error } = await renameForm(renameTarget.id, title);
+
+        if (!isMountedRef.current) {
+            return;
+        }
+
+        if (error || !renamedForm) {
+            setRenameError(error || 'Unable to rename the form.');
+            setIsRenaming(false);
+            return;
+        }
+
+        setForms((currentForms) =>
+            currentForms.map((form) =>
+                form.id === renamedForm.id ? { ...form, ...renamedForm } : form
+            )
+        );
+        setRenameTarget(null);
+        setIsRenaming(false);
+    };
+
+    const handleOpenDelete = (form) => {
+        setDeleteTarget(form);
+        setDeleteError('');
+    };
+
+    const handleCloseDelete = () => {
+        if (isDeleting) {
+            return;
+        }
+
+        setDeleteTarget(null);
+        setDeleteError('');
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteTarget || isDeleting) {
+            return;
+        }
+
+        const formId = deleteTarget.id;
+        setIsDeleting(true);
+        setDeleteError('');
+
+        const { success, error } = await deleteForm(formId);
+
+        if (!isMountedRef.current) {
+            return;
+        }
+
+        if (!success) {
+            setDeleteError(error || 'Unable to delete the form.');
+            setIsDeleting(false);
+            return;
+        }
+
+        setForms((currentForms) => currentForms.filter((form) => form.id !== formId));
+        setResponseCounts((currentCounts) => {
+            const nextCounts = { ...currentCounts };
+            delete nextCounts[formId];
+            return nextCounts;
+        });
+        setDeleteTarget(null);
+        setIsDeleting(false);
+    };
 
     const handleCreate = async () => {
         if (isCreating) {
@@ -117,41 +239,36 @@ const DashboardPage = () => {
                 )}
 
                 {status === 'ready' && forms.length > 0 && (
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {forms.map((form) => (
-                            <div
+                            <FormCard
                                 key={form.id}
-                                className="rounded-xl border border-default bg-secondary p-4"
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <h3 className="text-base font-semibold text-primary">
-                                            {form.title}
-                                        </h3>
-                                        <p className="mt-2 text-xs text-secondary">
-                                            {formatUpdatedAt(form.updated_at)}
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShareFormId(form.id)}
-                                        className="rounded-lg border border-default bg-tertiary px-3 py-1 text-xs font-semibold text-secondary transition hover:text-primary"
-                                    >
-                                        Share
-                                    </button>
-                                </div>
-                            </div>
+                                form={form}
+                                responseCount={responseCounts[form.id]}
+                                onRename={handleOpenRename}
+                                onDelete={handleOpenDelete}
+                            />
                         ))}
                     </div>
                 )}
             </div>
-            {shareFormId && (
-                <ShareModal
-                    formId={shareFormId}
-                    isOpen={Boolean(shareFormId)}
-                    onClose={() => setShareFormId(null)}
-                />
-            )}
+            <RenameFormModal
+                key={renameTarget?.id || 'rename-form'}
+                form={renameTarget}
+                isOpen={Boolean(renameTarget)}
+                isSaving={isRenaming}
+                errorMessage={renameError}
+                onClose={handleCloseRename}
+                onSubmit={handleRenameSubmit}
+            />
+            <DeleteFormModal
+                form={deleteTarget}
+                isOpen={Boolean(deleteTarget)}
+                isDeleting={isDeleting}
+                errorMessage={deleteError}
+                onClose={handleCloseDelete}
+                onConfirm={handleDeleteConfirm}
+            />
         </DashboardLayout>
     );
 };
