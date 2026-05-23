@@ -6,7 +6,7 @@ import { ACCESS_TOKEN, REFRESH_TOKEN } from '../../../constants/config';
 const decodeToken = (token) => {
 	try {
 		return jwtDecode(token);
-	} catch (error) {
+	} catch {
 		return null;
 	}
 };
@@ -92,7 +92,7 @@ const useAuthStatus = () => {
 					updateState({
 						status: 'authenticated',
 					});
-				} catch (error) {
+				} catch {
 					clearTokens();
 					updateState({ status: 'unauthenticated' });
 				}
