@@ -70,7 +70,7 @@ const FormCard = ({ form, responseCount, onRename, onDelete }) => {
     const handleCopyLink = async () => {
         try {
             await navigator.clipboard.writeText(
-                `${window.location.origin}/forms/${form.id}/builder`
+                `${window.location.origin}/forms/${form.id}/view`
             );
             showCopyStatus('Copied');
         } catch {
