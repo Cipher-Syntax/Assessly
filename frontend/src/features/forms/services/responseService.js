@@ -25,6 +25,52 @@ const normalizeSubmitResponse = (payload) => {
     };
 };
 
+const normalizeAttemptResponse = (payload) => {
+    if (!isRecord(payload)) {
+        return null;
+    }
+
+    const sessionId =
+        Number.isInteger(payload.session_id) ? payload.session_id : null;
+
+    if (sessionId === null) {
+        return null;
+    }
+
+    const sessionUuid =
+        typeof payload.session_uuid === 'string' ? payload.session_uuid : null;
+    const formVersionId = payload.form_version_id ?? null;
+
+    return {
+        session_id: sessionId,
+        session_uuid: sessionUuid,
+        form_version_id: formVersionId,
+    };
+};
+
+const normalizeEventResponse = (payload) => {
+    if (!isRecord(payload)) {
+        return null;
+    }
+
+    const id = payload.id;
+
+    if (id === undefined || id === null) {
+        return null;
+    }
+
+    const eventType = typeof payload.event_type === 'string' ? payload.event_type : null;
+    const occurredAt = typeof payload.occurred_at === 'string' ? payload.occurred_at : null;
+    const metadata = isRecord(payload.metadata) ? payload.metadata : {};
+
+    return {
+        id,
+        event_type: eventType,
+        occurred_at: occurredAt,
+        metadata,
+    };
+};
+
 const extractFieldErrors = (payload) => {
     if (!isRecord(payload)) {
         return {};
@@ -75,18 +121,30 @@ const resolveErrorMessage = (status, payload) => {
     return 'Unable to submit the response right now.';
 };
 
-export const submitResponse = async ({ formId, answers, sessionUuid, token }) => {
+export const submitResponse = async ({
+    formId,
+    answers,
+    sessionUuid,
+    sessionId,
+    token,
+}) => {
     if (!formId) {
         return { response: null, error: 'Missing form id.', fieldErrors: {} };
     }
 
     try {
+        const payload = {
+            answers,
+            session_uuid: sessionUuid,
+        };
+
+        if (sessionId) {
+            payload.session_id = sessionId;
+        }
+
         const response = await publicApi.post(
             `/api/responses/forms/${formId}/submit/`,
-            {
-                answers,
-                session_uuid: sessionUuid,
-            },
+            payload,
             {
                 headers: token ? { 'X-Form-Access-Token': token } : {},
             }
@@ -116,6 +174,136 @@ export const submitResponse = async ({ formId, answers, sessionUuid, token }) =>
             response: null,
             error: resolveErrorMessage(status, payload),
             fieldErrors,
+        };
+    }
+};
+
+const resolveAttemptError = (status, payload) => {
+    if (isRecord(payload) && typeof payload.detail === 'string') {
+        return payload.detail;
+    }
+
+    if (status === 403) {
+        return 'You do not have access to start this attempt.';
+    }
+
+    if (status === 404) {
+        return 'This form is not available.';
+    }
+
+    return 'Unable to start the response session right now.';
+};
+
+export const createResponseAttempt = async ({ formId, sessionUuid, token }) => {
+    if (!formId) {
+        return { attempt: null, error: 'Missing form id.', status: null };
+    }
+
+    if (!sessionUuid) {
+        return { attempt: null, error: 'Missing session uuid.', status: null };
+    }
+
+    try {
+        const response = await publicApi.post(
+            `/api/responses/forms/${formId}/attempts/`,
+            { session_uuid: sessionUuid },
+            {
+                headers: token ? { 'X-Form-Access-Token': token } : {},
+            }
+        );
+
+        const normalized = normalizeAttemptResponse(response?.data);
+
+        if (!normalized) {
+            return {
+                attempt: null,
+                error: 'Unexpected response while starting the session.',
+                status: response?.status ?? null,
+            };
+        }
+
+        return {
+            attempt: normalized,
+            error: null,
+            status: response?.status ?? null,
+        };
+    } catch (error) {
+        const status = error?.response?.status;
+        const payload = error?.response?.data;
+
+        return {
+            attempt: null,
+            error: resolveAttemptError(status, payload),
+            status: status ?? null,
+        };
+    }
+};
+
+const resolveEventError = (status, payload) => {
+    if (isRecord(payload) && typeof payload.detail === 'string') {
+        return payload.detail;
+    }
+
+    if (status === 403) {
+        return 'You do not have access to log this event.';
+    }
+
+    if (status === 404) {
+        return 'Session not found.';
+    }
+
+    return 'Unable to log the event right now.';
+};
+
+export const logResponseEvent = async ({
+    sessionId,
+    eventType,
+    metadata,
+    occurredAt,
+    token,
+}) => {
+    if (!sessionId) {
+        return { event: null, error: 'Missing session id.' };
+    }
+
+    if (!eventType) {
+        return { event: null, error: 'Missing event type.' };
+    }
+
+    if (!occurredAt) {
+        return { event: null, error: 'Missing event timestamp.' };
+    }
+
+    try {
+        const response = await publicApi.post(
+            `/api/responses/sessions/${sessionId}/events/`,
+            {
+                event_type: eventType,
+                metadata: metadata || {},
+                occurred_at: occurredAt,
+            },
+            {
+                headers: token ? { 'X-Form-Access-Token': token } : {},
+            }
+        );
+
+        const normalized = normalizeEventResponse(response?.data);
+
+        if (!normalized) {
+            return {
+                event: null,
+                error: 'Unexpected response while logging the event.',
+            };
+        }
+
+        return { event: normalized, error: null };
+    } catch (error) {
+        const status = error?.response?.status;
+        const payload = error?.response?.data;
+
+        return {
+            event: null,
+            error: resolveEventError(status, payload),
         };
     }
 };
