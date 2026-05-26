@@ -136,19 +136,43 @@ def submit_response(form, user, form_version, session, answers):
     validation_service.validate_answers(form_version.schema, answers)
 
     with transaction.atomic():
-        response = Response.objects.create(
-            form=form,
-            form_version=form_version,
-            user=user if getattr(user, "is_authenticated", False) else None,
-            session=session,
-            status=Response.Status.SUBMITTED,
-            answers=answers or {},
-            submitted_at=timezone.now(),
-        )
+        draft = None
+        if user and getattr(user, "is_authenticated", False):
+            draft = (
+                Response.objects.select_for_update()
+                .filter(form=form, user=user, status=Response.Status.DRAFT)
+                .first()
+            )
+        elif session:
+            draft = (
+                Response.objects.select_for_update()
+                .filter(form=form, session=session, status=Response.Status.DRAFT)
+                .first()
+            )
+
+        if draft:
+            draft.form_version = form_version
+            draft.session = session
+            draft.answers = answers or {}
+            draft.status = Response.Status.SUBMITTED
+            draft.submitted_at = timezone.now()
+            draft.save()
+            response = draft
+        else:
+            response = Response.objects.create(
+                form=form,
+                form_version=form_version,
+                user=user if getattr(user, "is_authenticated", False) else None,
+                session=session,
+                status=Response.Status.SUBMITTED,
+                answers=answers or {},
+                submitted_at=timezone.now(),
+            )
+
         if user and getattr(user, "is_authenticated", False):
             Response.objects.filter(
                 form=form,
                 user=user,
                 status=Response.Status.DRAFT,
-            ).delete()
+            ).exclude(id=response.id).delete()
     return response

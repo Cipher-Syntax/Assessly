@@ -185,7 +185,7 @@ class ResponseListView(APIView):
 		responses = FormResponse.objects.filter(
 			form=form,
 			status=FormResponse.Status.SUBMITTED,
-		)
+		).order_by("-submitted_at", "-created_at", "-id")
 		serializer = ResponseListSerializer(responses, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
