@@ -43,7 +43,7 @@ const getResponseCountClassName = (responseCount) => {
     return 'font-semibold text-secondary';
 };
 
-const FormCard = ({ form, responseCount, onRename, onDelete }) => {
+const FormCard = ({ form, responseCount, onRename, onDelete, onClick }) => {
     const [copyStatus, setCopyStatus] = useState('');
     const copyTimerRef = useRef(null);
 
@@ -79,7 +79,7 @@ const FormCard = ({ form, responseCount, onRename, onDelete }) => {
     };
 
     return (
-        <article className="rounded-lg border border-default bg-secondary p-4">
+        <article className="rounded-lg border border-default bg-secondary p-4" onClick={onClick}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <h3 className="break-words text-base font-semibold text-primary">
