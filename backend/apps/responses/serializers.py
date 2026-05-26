@@ -56,7 +56,7 @@ class ResponseAttemptSerializer(serializers.Serializer):
 class ResponseListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Response
-        fields = ["id", "user_id", "status", "submitted_at", "created_at"]
+        fields = ["id", "user_id", "status", "submitted_at", "created_at", "answers"]
 
 
 class ResponseDetailSerializer(serializers.ModelSerializer):

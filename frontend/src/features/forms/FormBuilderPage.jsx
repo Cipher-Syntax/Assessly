@@ -12,6 +12,7 @@ import SectionCard from './components/SectionCard';
 import { QuestionCardPreview } from './components/QuestionCard';
 import useFormBuilder from './hooks/useFormBuilder';
 import ShareModal from '../permissions/components/ShareModal';
+import ResponsesPanel from '../responses/components/ResponsesPanel';
 
 const FormBuilderPage = () => {
     const { id } = useParams();
@@ -33,6 +34,7 @@ const FormBuilderPage = () => {
     const [activeQuestionId, setActiveQuestionId] = useState(null);
     const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('builder');
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -167,6 +169,28 @@ const FormBuilderPage = () => {
                     <div className="flex flex-col gap-6">
                         <section className="rounded-xl border border-default bg-secondary p-6">
                             <div className="flex flex-col gap-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('builder')}
+                                        className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${activeTab === 'builder'
+                                                ? 'bg-primary-500 text-primary'
+                                                : 'bg-tertiary text-secondary hover:text-primary'
+                                            }`}
+                                    >
+                                        Builder
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('responses')}
+                                        className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${activeTab === 'responses'
+                                                ? 'bg-primary-500 text-primary'
+                                                : 'bg-tertiary text-secondary hover:text-primary'
+                                            }`}
+                                    >
+                                        Responses
+                                    </button>
+                                </div>
                                 <div className="flex flex-wrap items-center justify-between gap-4">
                                     <label className="text-xs text-secondary">
                                         Form title
@@ -251,42 +275,48 @@ const FormBuilderPage = () => {
                             </div>
                         </section>
 
-                        <section className="flex flex-col gap-6">
-                            {sections.map((section, index) => (
-                                <SectionCard
-                                    key={section.id}
-                                    section={section}
-                                    sectionIndex={index}
-                                    sectionError={
-                                        validationErrors.sections[section.id]
-                                    }
-                                    questionErrors={validationErrors.questions}
-                                    sections={sections}
-                                    canDelete={sections.length > 1}
-                                    isDragDisabled={isSaving || isReadOnly}
-                                    isEditing={!isReadOnly}
-                                    onUpdateSection={actions.updateSection}
-                                    onDuplicateSection={actions.duplicateSection}
-                                    onDeleteSection={actions.deleteSection}
-                                    onAddQuestion={actions.addQuestion}
-                                    onUpdateQuestion={actions.updateQuestion}
-                                    onDeleteQuestion={actions.deleteQuestion}
-                                    onMoveQuestion={actions.moveQuestion}
-                                />
-                            ))}
-                        </section>
+                        {activeTab === 'builder' ? (
+                            <>
+                                <section className="flex flex-col gap-6">
+                                    {sections.map((section, index) => (
+                                        <SectionCard
+                                            key={section.id}
+                                            section={section}
+                                            sectionIndex={index}
+                                            sectionError={
+                                                validationErrors.sections[section.id]
+                                            }
+                                            questionErrors={validationErrors.questions}
+                                            sections={sections}
+                                            canDelete={sections.length > 1}
+                                            isDragDisabled={isSaving || isReadOnly}
+                                            isEditing={!isReadOnly}
+                                            onUpdateSection={actions.updateSection}
+                                            onDuplicateSection={actions.duplicateSection}
+                                            onDeleteSection={actions.deleteSection}
+                                            onAddQuestion={actions.addQuestion}
+                                            onUpdateQuestion={actions.updateQuestion}
+                                            onDeleteQuestion={actions.deleteQuestion}
+                                            onMoveQuestion={actions.moveQuestion}
+                                        />
+                                    ))}
+                                </section>
 
-                        <button
-                            type="button"
-                            onClick={actions.addSection}
-                            disabled={isReadOnly}
-                            className={`w-full rounded-lg border border-default px-4 py-3 text-sm font-semibold transition ${isReadOnly
-                                ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                                : 'bg-tertiary text-secondary hover:text-primary'
-                                }`}
-                        >
-                            Add section
-                        </button>
+                                <button
+                                    type="button"
+                                    onClick={actions.addSection}
+                                    disabled={isReadOnly}
+                                    className={`w-full rounded-lg border border-default px-4 py-3 text-sm font-semibold transition ${isReadOnly
+                                        ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
+                                        : 'bg-tertiary text-secondary hover:text-primary'
+                                        }`}
+                                >
+                                    Add section
+                                </button>
+                            </>
+                        ) : (
+                            <ResponsesPanel formId={id} />
+                        )}
                     </div>
                 </div>
             </div>
