@@ -82,7 +82,7 @@ const FormCard = ({ form, responseCount, onRename, onDelete, onClick }) => {
         <article className="rounded-lg border border-default bg-secondary p-4" onClick={onClick}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <h3 className="break-words text-base font-semibold text-primary">
+                    <h3 className="wrap-break-words text-base font-semibold text-primary">
                         {form.title}
                     </h3>
                     <p className="mt-2 text-xs text-secondary">
