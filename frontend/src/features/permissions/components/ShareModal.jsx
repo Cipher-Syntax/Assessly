@@ -187,7 +187,14 @@ const TokenPanel = ({
     onCopyToken,
     onCreate,
     onRevoke,
+    resolveTokenValue,
 }) => {
+    const isResponderScope = scope === 'responder';
+    const resolvedTokenValue =
+        revealedToken && revealedToken.scope === scope
+            ? resolveTokenValue(scope, revealedToken.token)
+            : '';
+
     return (
         <div className="rounded-lg border border-default bg-tertiary p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -212,15 +219,17 @@ const TokenPanel = ({
             {revealedToken && revealedToken.scope === scope && (
                 <div className="mt-4 rounded-lg border border-default bg-secondary p-3">
                     <p className="text-xs text-secondary">
-                        New token (shown once). Copy it now and store it securely.
+                        {isResponderScope
+                            ? 'New responder link (shown once). Copy it now and share it.'
+                            : 'New token (shown once). Copy it now and store it securely.'}
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                         <code className="break-all rounded bg-tertiary px-2 py-1 text-xs text-primary">
-                            {revealedToken.token}
+                            {resolvedTokenValue}
                         </code>
                         <button
                             type="button"
-                            onClick={() => onCopyToken(revealedToken.token)}
+                            onClick={() => onCopyToken(revealedToken.token, scope)}
                             className="rounded-lg border border-default bg-tertiary px-2 py-1 text-xs font-semibold text-secondary transition hover:text-primary"
                         >
                             Copy
@@ -295,6 +304,7 @@ const TokenSection = ({
     onRevoke,
     onCopyToken,
     copyStatus,
+    resolveTokenValue,
 }) => {
     const editorTokens = useMemo(
         () => tokens.filter((token) => token.scope === 'editor'),
@@ -323,6 +333,7 @@ const TokenSection = ({
                     onCopyToken={onCopyToken}
                     onCreate={onCreate}
                     onRevoke={onRevoke}
+                    resolveTokenValue={resolveTokenValue}
                 />
                 <TokenPanel
                     title="Responder"
@@ -335,6 +346,7 @@ const TokenSection = ({
                     onCopyToken={onCopyToken}
                     onCreate={onCreate}
                     onRevoke={onRevoke}
+                    resolveTokenValue={resolveTokenValue}
                 />
             </div>
             {error && <p className="mt-3 text-xs text-danger">{error}</p>}
@@ -362,6 +374,18 @@ const ShareModal = ({ formId, isOpen, onClose }) => {
     const [revokingTokenId, setRevokingTokenId] = useState(null);
     const [revealedToken, setRevealedToken] = useState(null);
     const [copyStatus, setCopyStatus] = useState('');
+
+    const resolveTokenValue = (scope, tokenValue) => {
+        if (!tokenValue) {
+            return '';
+        }
+
+        if (scope === 'responder' && formId) {
+            return `${window.location.origin}/forms/${formId}/view?token=${tokenValue}`;
+        }
+
+        return tokenValue;
+    };
 
     useEffect(() => {
         if (!isOpen) {
@@ -552,13 +576,13 @@ const ShareModal = ({ formId, isOpen, onClose }) => {
         setRevokingTokenId(null);
     };
 
-    const handleCopyToken = async (tokenValue) => {
+    const handleCopyToken = async (tokenValue, scope) => {
         if (!tokenValue) {
             return;
         }
 
         try {
-            await navigator.clipboard.writeText(tokenValue);
+            await navigator.clipboard.writeText(resolveTokenValue(scope, tokenValue));
             setCopyStatus('Copied');
         } catch {
             setCopyStatus('Copy failed');
@@ -630,6 +654,7 @@ const ShareModal = ({ formId, isOpen, onClose }) => {
                                 onRevoke={handleRevokeToken}
                                 onCopyToken={handleCopyToken}
                                 copyStatus={copyStatus}
+                                resolveTokenValue={resolveTokenValue}
                             />
                         </div>
                     )}

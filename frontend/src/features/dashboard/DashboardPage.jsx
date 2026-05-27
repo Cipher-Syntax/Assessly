@@ -210,6 +210,11 @@ const DashboardPage = () => {
         navigate(`/forms/${form.id}/builder`, { state: { formTitle: form.title } });
     };
 
+    const handleRedirectForm = async (id) => {
+
+        navigate(`/forms/${id}/builder`);
+    }
+
     return (
         <DashboardLayout>
             <div className="flex flex-col gap-6">
@@ -239,7 +244,7 @@ const DashboardPage = () => {
                 )}
 
                 {status === 'ready' && forms.length > 0 && (
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 cursor-pointer">
                         {forms.map((form) => (
                             <FormCard
                                 key={form.id}
@@ -247,6 +252,7 @@ const DashboardPage = () => {
                                 responseCount={responseCounts[form.id]}
                                 onRename={handleOpenRename}
                                 onDelete={handleOpenDelete}
+                                onClick={() => handleRedirectForm(form.id)}
                             />
                         ))}
                     </div>

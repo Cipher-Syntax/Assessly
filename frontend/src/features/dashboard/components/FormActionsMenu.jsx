@@ -79,7 +79,7 @@ const FormActionsMenu = ({ onRename, onDelete, onCopy }) => {
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-secondary transition hover:bg-secondary hover:text-primary"
                     >
                         <Copy aria-hidden="true" size={15} />
-                        Copy link
+                        Copy responder link
                     </button>
                 </div>
             )}
