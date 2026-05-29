@@ -98,6 +98,14 @@
 		border-color: var(--border-default);
 	}
 
+	.border-primary-500 {
+		border-color: var(--primary-500);
+	}
+
+	.border-danger {
+		border-color: var(--danger);
+	}
+
 	.border-focus {
 		border-color: var(--border-focus);
 	}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
     closestCenter,
@@ -13,6 +13,9 @@ import { QuestionCardPreview } from './components/QuestionCard';
 import useFormBuilder from './hooks/useFormBuilder';
 import ShareModal from '../permissions/components/ShareModal';
 import ResponsesPanel from '../responses/components/ResponsesPanel';
+import PageSpinner from '../../components/ui/PageSpinner';
+import Spinner from '../../components/ui/Spinner';
+import { useToast } from '../../app/useToast';
 
 const FormBuilderPage = () => {
     const { id } = useParams();
@@ -26,6 +29,7 @@ const FormBuilderPage = () => {
         isEditingDraft,
         isSaving,
         isPublishing,
+        lastSavedAt,
         saveError,
         validationErrors,
         actions,
@@ -35,6 +39,11 @@ const FormBuilderPage = () => {
     const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('builder');
+    const toast = useToast();
+    const hasLoadedRef = useRef(false);
+    const lastSaveToastRef = useRef(0);
+    const lastPublishedIdRef = useRef(publishedVersion?.id ?? null);
+    const wasPublishingRef = useRef(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -123,17 +132,51 @@ const FormBuilderPage = () => {
         );
     };
 
+    useEffect(() => {
+        if (status === 'ready' && !hasLoadedRef.current) {
+            hasLoadedRef.current = true;
+        }
+    }, [status]);
+
+    useEffect(() => {
+        if (!hasLoadedRef.current || !lastSavedAt) {
+            return;
+        }
+
+        const now = Date.now();
+        if (now - lastSaveToastRef.current < 10000) {
+            return;
+        }
+
+        toast.success('Draft saved.');
+        lastSaveToastRef.current = now;
+    }, [lastSavedAt, toast]);
+
+    useEffect(() => {
+        if (isPublishing) {
+            wasPublishingRef.current = true;
+            return;
+        }
+
+        if (!wasPublishingRef.current) {
+            return;
+        }
+
+        wasPublishingRef.current = false;
+
+        if (publishedVersion && publishedVersion.id !== lastPublishedIdRef.current) {
+            lastPublishedIdRef.current = publishedVersion.id;
+            toast.success('Form published.');
+        }
+    }, [isPublishing, publishedVersion, toast]);
+
     if (status === 'loading') {
-        return (
-            <div className="min-h-screen bg-primary text-primary flex items-center justify-center px-6 py-10">
-                <p className="text-sm text-secondary">Loading form...</p>
-            </div>
-        );
+        return <PageSpinner message="Loading form..." />;
     }
 
     if (status === 'error') {
         return (
-            <div className="min-h-screen bg-primary text-primary flex items-center justify-center px-6 py-10">
+            <div className="min-h-screen bg-primary text-primary flex items-center justify-center px-4 py-10 sm:px-6">
                 <div className="w-full max-w-xl rounded-xl border border-default bg-secondary px-6 py-6 text-center">
                     <h1 className="text-lg font-semibold text-primary">
                         Unable to load form
@@ -165,7 +208,7 @@ const FormBuilderPage = () => {
             onDragEnd={handleDragEnd}
         >
             <div className="min-h-screen bg-primary text-primary">
-                <div className="mx-auto w-full max-w-4xl px-6 py-10">
+                <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
                     <div className="flex flex-col gap-6">
                         <section className="rounded-xl border border-default bg-secondary p-6">
                             <div className="flex flex-col gap-4">
@@ -174,8 +217,8 @@ const FormBuilderPage = () => {
                                         type="button"
                                         onClick={() => setActiveTab('builder')}
                                         className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${activeTab === 'builder'
-                                                ? 'bg-primary-500 text-primary'
-                                                : 'bg-tertiary text-secondary hover:text-primary'
+                                            ? 'bg-primary-500 text-primary'
+                                            : 'bg-tertiary text-secondary hover:text-primary'
                                             }`}
                                     >
                                         Builder
@@ -184,8 +227,8 @@ const FormBuilderPage = () => {
                                         type="button"
                                         onClick={() => setActiveTab('responses')}
                                         className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${activeTab === 'responses'
-                                                ? 'bg-primary-500 text-primary'
-                                                : 'bg-tertiary text-secondary hover:text-primary'
+                                            ? 'bg-primary-500 text-primary'
+                                            : 'bg-tertiary text-secondary hover:text-primary'
                                             }`}
                                     >
                                         Responses
@@ -230,7 +273,14 @@ const FormBuilderPage = () => {
                                                 : 'bg-primary-500 text-primary hover:bg-primary-600'
                                                 }`}
                                         >
-                                            Publish
+                                            {isPublishing ? (
+                                                <span className="inline-flex items-center gap-2">
+                                                    <Spinner size="sm" />
+                                                    Publishing...
+                                                </span>
+                                            ) : (
+                                                'Publish'
+                                            )}
                                         </button>
                                     </div>
                                 </div>
@@ -348,7 +398,14 @@ const FormBuilderPage = () => {
                                     : 'bg-primary-500 text-primary hover:bg-primary-600'
                                     }`}
                             >
-                                Publish
+                                {isPublishing ? (
+                                    <span className="inline-flex items-center gap-2">
+                                        <Spinner size="sm" />
+                                        Publishing...
+                                    </span>
+                                ) : (
+                                    'Publish'
+                                )}
                             </button>
                         </div>
                     </div>

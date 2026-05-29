@@ -182,10 +182,14 @@ class ResponseListView(APIView):
 	def get(self, request, form_id):
 		form = get_object_or_404(Form, pk=form_id)
 		_ensure_access(request, form, FormRole.Role.EDITOR)
-		responses = FormResponse.objects.filter(
-			form=form,
-			status=FormResponse.Status.SUBMITTED,
-		).order_by("-submitted_at", "-created_at", "-id")
+		responses = (
+			FormResponse.objects.filter(
+				form=form,
+				status=FormResponse.Status.SUBMITTED,
+			)
+			.select_related("user", "form", "form_version", "session")
+			.order_by("-submitted_at", "-created_at", "-id")
+		)
 		serializer = ResponseListSerializer(responses, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -195,7 +199,7 @@ class ResponseDetailView(APIView):
 
 	def get(self, request, response_id):
 		response_obj = get_object_or_404(
-			FormResponse.objects.select_related("form", "session"),
+			FormResponse.objects.select_related("user", "form", "form_version", "session"),
 			pk=response_id,
 		)
 		_ensure_access(request, response_obj.form, FormRole.Role.EDITOR)

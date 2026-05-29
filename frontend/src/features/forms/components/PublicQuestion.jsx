@@ -15,6 +15,8 @@ const PublicQuestion = ({ question, index, value, error, onChange, isDisabled })
     const questionId = question?.id;
     const required = Boolean(question?.required);
     const options = Array.isArray(question?.options) ? question.options : [];
+    const hasError = Boolean(error);
+    const inputBorderClass = hasError ? 'border-danger' : 'border-default';
 
     const handleTextChange = (event) => {
         if (!questionId) {
@@ -51,7 +53,8 @@ const PublicQuestion = ({ question, index, value, error, onChange, isDisabled })
                     value={typeof value === 'string' ? value : ''}
                     onChange={handleTextChange}
                     disabled={isDisabled}
-                    className="w-full resize-none rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                    aria-invalid={hasError}
+                    className={`w-full resize-none rounded-lg border ${inputBorderClass} bg-secondary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70`}
                     placeholder="Type your answer"
                 />
             );
@@ -64,7 +67,7 @@ const PublicQuestion = ({ question, index, value, error, onChange, isDisabled })
                     {options.map((option, optionIndex) => (
                         <label
                             key={`${questionId || index}-option-${optionIndex}`}
-                            className="flex items-center gap-3 rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary"
+                            className={`flex items-center gap-3 rounded-lg border ${inputBorderClass} bg-secondary px-3 py-2 text-sm text-primary`}
                         >
                             <input
                                 type="radio"
@@ -89,7 +92,7 @@ const PublicQuestion = ({ question, index, value, error, onChange, isDisabled })
                     {options.map((option, optionIndex) => (
                         <label
                             key={`${questionId || index}-option-${optionIndex}`}
-                            className="flex items-center gap-3 rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary"
+                            className={`flex items-center gap-3 rounded-lg border ${inputBorderClass} bg-secondary px-3 py-2 text-sm text-primary`}
                         >
                             <input
                                 type="checkbox"
@@ -112,7 +115,8 @@ const PublicQuestion = ({ question, index, value, error, onChange, isDisabled })
                     value={typeof value === 'string' ? value : ''}
                     onChange={(event) => handleChoiceChange(event.target.value)}
                     disabled={isDisabled}
-                    className="w-full rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                    aria-invalid={hasError}
+                    className={`w-full rounded-lg border ${inputBorderClass} bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70`}
                 >
                     <option value="">Select an option</option>
                     {options.map((option, optionIndex) => (
@@ -130,7 +134,8 @@ const PublicQuestion = ({ question, index, value, error, onChange, isDisabled })
                 value={typeof value === 'string' ? value : ''}
                 onChange={handleTextChange}
                 disabled={isDisabled}
-                className="w-full rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                aria-invalid={hasError}
+                className={`w-full rounded-lg border ${inputBorderClass} bg-secondary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70`}
                 placeholder="Type your answer"
             />
         );
