@@ -9,6 +9,9 @@ import {
     logResponseEvent,
     submitResponse,
 } from './services/responseService';
+import PageSpinner from '../../components/ui/PageSpinner';
+import Spinner from '../../components/ui/Spinner';
+import { useToast } from '../../app/useToast';
 
 const TOAST_TTL_MS = 3800;
 
@@ -233,6 +236,7 @@ const PublicFormPage = () => {
     const autoSubmitInFlightRef = useRef(false);
     const violationCountRef = useRef(0);
     const focusLossActiveRef = useRef(false);
+    const toast = useToast();
 
     const sections = form?.publishedSchema?.sections || [];
     const questions = useMemo(() => flattenQuestions(sections), [sections]);
@@ -803,28 +807,28 @@ const PublicFormPage = () => {
 
         if (submitMessage) {
             setSubmitError(submitMessage);
+            toast.error(submitMessage);
+        } else if (serverErrors && Object.keys(serverErrors).length > 0) {
+            toast.error('Please review the highlighted questions.');
         }
 
         if (response) {
             setSubmission(response);
             setIsSubmitted(true);
             stopMonitoring();
+            toast.success('Response submitted.');
         }
 
         setIsSubmitting(false);
     };
 
     if (status === 'loading') {
-        return (
-            <div className="min-h-screen bg-primary text-primary flex items-center justify-center px-6 py-10">
-                <p className="text-sm text-secondary">Loading form...</p>
-            </div>
-        );
+        return <PageSpinner message="Loading form..." />;
     }
 
     if (status === 'error') {
         return (
-            <div className="min-h-screen bg-primary text-primary px-6 py-10">
+            <div className="min-h-screen bg-primary text-primary px-4 py-10 sm:px-6">
                 <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
                     <div className="rounded-xl border border-default bg-secondary px-6 py-6 text-center">
                         <h1 className="text-lg font-semibold text-primary">
@@ -840,7 +844,7 @@ const PublicFormPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-primary text-primary px-6 py-10">
+        <div className="min-h-screen bg-primary text-primary px-4 py-10 sm:px-6">
             {toasts.length > 0 && (
                 <div className="pointer-events-none fixed right-6 top-6 z-50 flex w-72 flex-col gap-2">
                     {toasts.map((toast) => (
@@ -917,7 +921,14 @@ const PublicFormPage = () => {
                                 disabled={isSubmitting}
                                 className="inline-flex w-full items-center justify-center rounded-lg bg-primary-500 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-70"
                             >
-                                {isSubmitting ? 'Submitting...' : 'Submit'}
+                                {isSubmitting ? (
+                                    <span className="inline-flex items-center gap-2">
+                                        <Spinner size="sm" />
+                                        Submitting...
+                                    </span>
+                                ) : (
+                                    'Submit'
+                                )}
                             </button>
                             {(isAuthenticated || monitoringActive) && (
                                 <div className="mt-2 flex flex-col gap-1 text-xs text-secondary">

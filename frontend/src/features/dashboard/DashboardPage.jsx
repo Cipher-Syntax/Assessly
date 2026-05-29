@@ -19,6 +19,14 @@ const buildLoadingCountMap = (forms) =>
         return counts;
     }, {});
 
+const FormCardSkeleton = () => (
+    <div className="rounded-lg border border-default bg-secondary p-4 animate-pulse">
+        <div className="h-4 w-3/4 rounded bg-tertiary" />
+        <div className="mt-3 h-3 w-1/2 rounded bg-tertiary" />
+        <div className="mt-6 h-3 w-1/3 rounded bg-tertiary" />
+    </div>
+);
+
 const DashboardPage = () => {
     const navigate = useNavigate();
     const isMountedRef = useRef(true);
@@ -211,9 +219,8 @@ const DashboardPage = () => {
     };
 
     const handleRedirectForm = async (id) => {
-
         navigate(`/forms/${id}/builder`);
-    }
+    };
 
     return (
         <DashboardLayout>
@@ -226,7 +233,11 @@ const DashboardPage = () => {
                 </header>
 
                 {status === 'loading' && (
-                    <p className="text-sm text-secondary">Loading forms...</p>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <FormCardSkeleton key={`form-skeleton-${index}`} />
+                        ))}
+                    </div>
                 )}
 
                 {status === 'error' && (

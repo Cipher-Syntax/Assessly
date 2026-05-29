@@ -4,6 +4,8 @@ import { Eye, EyeOff, ScanText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ACCESS_TOKEN, REFRESH_TOKEN } from '../../constants/config';
 import { googleLogin, login, register, resendOtp, verifyOtp } from './services/authService';
+import Spinner from '../../components/ui/Spinner';
+import { useToast } from '../../app/useToast';
 
 const emailPattern = /\S+@\S+\.\S+/;
 const PENDING_OTP_EMAIL_KEY = 'assessly_pending_otp_email';
@@ -69,6 +71,7 @@ const AuthForm = ({ mode = 'login' }) => {
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
     const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
     const otpInputsRef = useRef([]);
+    const toast = useToast();
 
     const isRegisterMode = mode === 'register';
     const isOtpStep = isRegisterMode && step === 'otp';
@@ -285,7 +288,9 @@ const AuthForm = ({ mode = 'login' }) => {
                     return;
                 }
             }
-            setFormError(getErrorMessage(error, 'Unable to sign in.'));
+            const message = getErrorMessage(error, 'Unable to sign in.');
+            setFormError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -316,7 +321,9 @@ const AuthForm = ({ mode = 'login' }) => {
             setOtpDigits(Array(6).fill(''));
             setResendCooldown(20);
         } catch (error) {
-            setFormError(getErrorMessage(error, 'Unable to create account.'));
+            const message = getErrorMessage(error, 'Unable to create account.');
+            setFormError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -340,7 +347,9 @@ const AuthForm = ({ mode = 'login' }) => {
             localStorage.removeItem(PENDING_OTP_EMAIL_KEY);
             navigate('/login', { state: { prefillEmail: email, verified: true } });
         } catch (error) {
-            setFormError(getErrorMessage(error, 'Unable to verify code.'));
+            const message = getErrorMessage(error, 'Unable to verify code.');
+            setFormError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -423,7 +432,9 @@ const AuthForm = ({ mode = 'login' }) => {
             await resendOtp({ email });
             setResendCooldown(20);
         } catch (error) {
-            setFormError(getErrorMessage(error, 'Unable to resend code.'));
+            const message = getErrorMessage(error, 'Unable to resend code.');
+            setFormError(message);
+            toast.error(message);
         } finally {
             setResending(false);
         }
@@ -440,20 +451,26 @@ const AuthForm = ({ mode = 'login' }) => {
                 localStorage.removeItem(PENDING_OTP_EMAIL_KEY);
                 navigate('/dashboard');
             } catch (error) {
-                setFormError(getErrorMessage(error, 'Google sign in failed.'));
+                const message = getErrorMessage(error, 'Google sign in failed.');
+                setFormError(message);
+                toast.error(message);
             } finally {
                 setGoogleLoading(false);
             }
         },
         onError: () => {
-            setFormError('Google sign in failed.');
+            const message = 'Google sign in failed.';
+            setFormError(message);
+            toast.error(message);
         },
         scope: 'openid email profile',
     });
 
     const handleGoogleSignIn = () => {
         if (!googleClientId) {
-            setFormError('Missing Google client ID. Set VITE_GOOGLE_CLIENT_ID in frontend/.env.');
+            const message = 'Missing Google client ID. Set VITE_GOOGLE_CLIENT_ID in frontend/.env.';
+            setFormError(message);
+            toast.error(message);
             return;
         }
         startGoogleLogin();
@@ -474,7 +491,14 @@ const AuthForm = ({ mode = 'login' }) => {
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
         >
-            {googleLoading ? 'Connecting...' : 'Continue with Google'}
+            {googleLoading ? (
+                <span className="inline-flex items-center gap-2">
+                    <Spinner size="sm" />
+                    Connecting...
+                </span>
+            ) : (
+                'Continue with Google'
+            )}
         </button>
     );
 
@@ -557,7 +581,14 @@ const AuthForm = ({ mode = 'login' }) => {
                 {renderGoogleButton()}
             </div>
             <button type="submit" className={primaryButtonClass} disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? (
+                    <span className="inline-flex items-center gap-2">
+                        <Spinner size="sm" />
+                        Signing in...
+                    </span>
+                ) : (
+                    'Sign in'
+                )}
             </button>
             <p className="text-sm text-secondary">
                 Need an account?{' '}
@@ -650,7 +681,14 @@ const AuthForm = ({ mode = 'login' }) => {
                 {renderGoogleButton()}
             </div>
             <button type="submit" className={primaryButtonClass} disabled={loading}>
-                {loading ? 'Creating account...' : 'Create account'}
+                {loading ? (
+                    <span className="inline-flex items-center gap-2">
+                        <Spinner size="sm" />
+                        Creating account...
+                    </span>
+                ) : (
+                    'Create account'
+                )}
             </button>
             <p className="text-sm text-secondary">
                 Already have an account?{' '}
@@ -694,7 +732,14 @@ const AuthForm = ({ mode = 'login' }) => {
                 ) : null}
             </div>
             <button type="submit" className={primaryButtonClass} disabled={loading}>
-                {loading ? 'Verifying...' : 'Verify email'}
+                {loading ? (
+                    <span className="inline-flex items-center gap-2">
+                        <Spinner size="sm" />
+                        Verifying...
+                    </span>
+                ) : (
+                    'Verify email'
+                )}
             </button>
             <div className="flex items-center justify-between text-sm text-secondary">
                 <span>Did not get a code?</span>

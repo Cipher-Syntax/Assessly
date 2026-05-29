@@ -19,22 +19,6 @@ const formatUpdatedAt = (value) => {
     })}`;
 };
 
-const getResponseCountLabel = (responseCount) => {
-    if (!responseCount || responseCount.status === 'loading') {
-        return 'Loading...';
-    }
-
-    if (responseCount.status === 'error') {
-        return '--';
-    }
-
-    if (typeof responseCount.count === 'number') {
-        return String(responseCount.count);
-    }
-
-    return '--';
-};
-
 const getResponseCountClassName = (responseCount) => {
     if (responseCount?.status === 'ready') {
         return 'font-semibold text-primary';
@@ -78,6 +62,28 @@ const FormCard = ({ form, responseCount, onRename, onDelete, onClick }) => {
         }
     };
 
+    const renderResponseCount = () => {
+        if (!responseCount || responseCount.status === 'loading') {
+            return (
+                <span className="inline-block h-3 w-10 rounded bg-tertiary animate-pulse" />
+            );
+        }
+
+        if (responseCount.status === 'error') {
+            return <span className={getResponseCountClassName(responseCount)}>--</span>;
+        }
+
+        if (typeof responseCount.count === 'number') {
+            return (
+                <span className={getResponseCountClassName(responseCount)}>
+                    {responseCount.count}
+                </span>
+            );
+        }
+
+        return <span className={getResponseCountClassName(responseCount)}>--</span>;
+    };
+
     return (
         <article className="rounded-lg border border-default bg-secondary p-4" onClick={onClick}>
             <div className="flex items-start justify-between gap-3">
@@ -101,10 +107,7 @@ const FormCard = ({ form, responseCount, onRename, onDelete, onClick }) => {
                     className="text-xs text-secondary"
                     title={responseCount?.error || undefined}
                 >
-                    Responses:{' '}
-                    <span className={getResponseCountClassName(responseCount)}>
-                        {getResponseCountLabel(responseCount)}
-                    </span>
+                    Responses: {renderResponseCount()}
                 </p>
                 {copyStatus && (
                     <span className="rounded-full border border-default bg-tertiary px-2 py-1 text-xs font-semibold text-primary-500">
