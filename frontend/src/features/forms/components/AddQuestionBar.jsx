@@ -7,7 +7,7 @@ const AddQuestionBar = ({ onAdd, isDisabled = false }) => {
                 disabled={isDisabled}
                 className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition ${isDisabled
                     ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                    : 'bg-primary-500 text-primary hover:bg-primary-600'
+                    : 'bg-primary-500 text-on-primary hover:bg-primary-600'
                     }`}
             >
                 Add short text

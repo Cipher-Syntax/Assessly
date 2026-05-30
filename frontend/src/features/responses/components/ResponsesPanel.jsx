@@ -299,8 +299,8 @@ const ResponsesPanel = ({ formId }) => {
                             onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
                             disabled={!canGoPrev}
                             className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${canGoPrev
-                                    ? 'bg-tertiary text-secondary hover:text-primary'
-                                    : 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
+                                ? 'bg-tertiary text-secondary hover:text-primary'
+                                : 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
                                 }`}
                         >
                             Prev
@@ -314,8 +314,8 @@ const ResponsesPanel = ({ formId }) => {
                             }
                             disabled={!canGoNext}
                             className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${canGoNext
-                                    ? 'bg-tertiary text-secondary hover:text-primary'
-                                    : 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
+                                ? 'bg-tertiary text-secondary hover:text-primary'
+                                : 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
                                 }`}
                         >
                             Next
@@ -341,8 +341,8 @@ const ResponsesPanel = ({ formId }) => {
                         type="button"
                         onClick={() => setView('summary')}
                         className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${view === 'summary'
-                                ? 'bg-primary-500 text-primary'
-                                : 'bg-tertiary text-secondary hover:text-primary'
+                            ? 'bg-primary-500 text-on-primary'
+                            : 'bg-tertiary text-secondary hover:text-primary'
                             }`}
                     >
                         Summary
@@ -351,8 +351,8 @@ const ResponsesPanel = ({ formId }) => {
                         type="button"
                         onClick={() => setView('individual')}
                         className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${view === 'individual'
-                                ? 'bg-primary-500 text-primary'
-                                : 'bg-tertiary text-secondary hover:text-primary'
+                            ? 'bg-primary-500 text-on-primary'
+                            : 'bg-tertiary text-secondary hover:text-primary'
                             }`}
                     >
                         Individual
@@ -363,8 +363,8 @@ const ResponsesPanel = ({ formId }) => {
                     onClick={handleRefresh}
                     disabled={responsesStatus === 'loading'}
                     className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${responsesStatus === 'loading'
-                            ? 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
-                            : 'bg-tertiary text-secondary hover:text-primary'
+                        ? 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
+                        : 'bg-tertiary text-secondary hover:text-primary'
                         }`}
                 >
                     Refresh

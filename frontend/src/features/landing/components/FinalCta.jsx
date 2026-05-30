@@ -12,7 +12,7 @@ const FinalCta = () => {
                     <div className="mt-6 flex justify-center">
                         <Link
                             to="/login"
-                            className="rounded-md bg-gradient-primary px-6 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5"
+                            className="rounded-md bg-gradient-primary px-6 py-3 text-sm font-semibold text-on-primary transition hover:-translate-y-0.5"
                         >
                             Get started
                         </Link>
