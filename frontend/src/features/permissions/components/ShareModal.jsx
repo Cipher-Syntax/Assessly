@@ -140,7 +140,7 @@ const PeopleSection = ({
                     disabled={isAssigning}
                     className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${isAssigning
                         ? 'bg-secondary text-muted opacity-70 cursor-not-allowed'
-                        : 'bg-primary-500 text-primary hover:bg-primary-600'
+                        : 'bg-primary-500 text-on-primary hover:bg-primary-600'
                         }`}
                 >
                     {isAssigning ? 'Assigning...' : 'Assign'}
@@ -210,7 +210,7 @@ const TokenPanel = ({
                     disabled={isCreating}
                     className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${isCreating
                         ? 'bg-secondary text-muted opacity-70 cursor-not-allowed'
-                        : 'bg-primary-500 text-primary hover:bg-primary-600'
+                        : 'bg-primary-500 text-on-primary hover:bg-primary-600'
                         }`}
                 >
                     {isCreating ? 'Generating...' : 'Generate link'}
@@ -594,7 +594,7 @@ const ShareModal = ({ formId, isOpen, onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-8">
             <div className="flex w-full max-w-4xl max-h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-xl border border-default bg-secondary shadow-lg">
                 <div className="flex items-start justify-between gap-4 border-b border-default px-6 py-4">
                     <div>

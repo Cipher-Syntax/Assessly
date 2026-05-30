@@ -19,7 +19,7 @@ const Hero = () => {
                     <div className="mt-8 flex flex-wrap gap-4">
                         <Link
                             to="/login"
-                            className="rounded-md bg-gradient-primary px-5 py-3 text-sm font-semibold text-primary transition hover:-translate-y-0.5"
+                            className="rounded-md bg-gradient-primary px-5 py-3 text-sm font-semibold text-on-primary transition hover:-translate-y-0.5"
                         >
                             Get started
                         </Link>

@@ -1,35 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@100;200;300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 :root {
-	--bg-primary: #0B1220;
-	--bg-secondary: #111A2E;
-	--bg-tertiary: #16233D;
-	--surface-overlay: rgba(255, 255, 255, 0.04);
-	--text-primary: #E6EDF7;
-	--text-secondary: #A7B0C0;
+	--font-primary: 'Open Sans', 'Segoe UI', system-ui, sans-serif;
+	--font-display: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+	--font-mono: 'IBM Plex Mono', 'SFMono-Regular', ui-monospace, monospace;
+	--bg-primary: #FFFFFF;
+	--bg-secondary: #F8FAFC;
+	--bg-tertiary: #F1F5F9;
+	--surface-overlay: rgba(17, 24, 39, 0.04);
+	--text-primary: #111827;
+	--text-secondary: #475569;
 	--text-muted: #6B7280;
-	--border-default: #24324A;
+	--text-on-primary: #FFFFFF;
+	--border-default: #E2E8F0;
 	--border-focus: #3B82F6;
 	--primary-500: #3B82F6;
 	--primary-600: #2563EB;
 	--primary-700: #1D4ED8;
-	--primary-soft: rgba(59, 130, 246, 0.15);
-	--success: #22C55E;
-	--warning: #F59E0B;
-	--danger: #EF4444;
-	--info: #38BDF8;
+	--secondary-500: #8B5CF6;
+	--primary-soft: rgba(59, 130, 246, 0.12);
+	--success: #16A34A;
+	--warning: #D97706;
+	--danger: #DC2626;
+	--info: #0EA5E9;
 	--alert-low: #FACC15;
 	--alert-mid: #F97316;
-	--alert-high: #EF4444;
+	--alert-high: #DC2626;
 	--alert-glow: rgba(250, 204, 21, 0.2);
-	--gradient-primary: linear-gradient(135deg, #3B82F6, #1D4ED8);
-	--gradient-surface: linear-gradient(180deg, #111A2E, #0B1220);
+	--gradient-primary: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+	--gradient-surface: linear-gradient(180deg, var(--bg-secondary), var(--bg-primary));
+	--overlay-backdrop: rgba(17, 24, 39, 0.45);
 }
 
 @layer base {
 	body {
-		background-color: var(--bg-primary);
+		background: var(--gradient-surface);
 		color: var(--text-primary);
+		font-family: var(--font-primary);
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: var(--font-display);
+		color: var(--text-primary);
+	}
+
+	code,
+	pre {
+		font-family: var(--font-mono);
 	}
 }
 
@@ -62,6 +85,10 @@
 		background-color: var(--primary-500);
 	}
 
+	.bg-overlay {
+		background-color: var(--overlay-backdrop);
+	}
+
 	.bg-alert-low {
 		background-color: var(--alert-low);
 	}
@@ -90,6 +117,10 @@
 		color: var(--primary-500);
 	}
 
+	.text-on-primary {
+		color: var(--text-on-primary);
+	}
+
 	.text-danger {
         color: var(--danger);
     }
@@ -111,13 +142,15 @@
 	}
 
 	.text-display {
-		font-size: 32px;
-		line-height: 1.1;
+		font-family: var(--font-display);
+		font-size: 3rem;
+		line-height: 1.05;
 	}
 
 	.text-title {
-		font-size: 24px;
-		line-height: 1.2;
+		font-family: var(--font-display);
+		font-size: 2rem;
+		line-height: 1.15;
 	}
 
 	.bg-grid {
@@ -139,7 +172,7 @@
 		height: 360px;
 		top: -140px;
 		right: -120px;
-		background: rgba(59, 130, 246, 0.35);
+		background: rgba(59, 130, 246, 0.18);
 	}
 
 	.glow-orb--two {
@@ -147,7 +180,7 @@
 		height: 460px;
 		bottom: -180px;
 		left: -160px;
-		background: rgba(37, 99, 235, 0.25);
+		background: rgba(139, 92, 246, 0.14);
 	}
 
 	.reveal {

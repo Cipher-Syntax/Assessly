@@ -10,7 +10,7 @@ const EmptyState = ({ onCreate, isCreating, errorMessage }) => {
                     type="button"
                     onClick={onCreate}
                     disabled={isCreating}
-                    className="cursor-pointer mt-6 inline-flex items-center justify-center rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="cursor-pointer mt-6 inline-flex items-center justify-center rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                     {isCreating ? 'Creating...' : 'Create Blank Form'}
                 </button>

@@ -11,7 +11,7 @@ const DeleteFormModal = ({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-8">
             <div className="w-full max-w-md rounded-lg border border-default bg-secondary shadow-lg">
                 <div className="border-b border-default px-5 py-4">
                     <h2 className="text-lg font-semibold text-primary">Delete form</h2>
@@ -43,7 +43,7 @@ const DeleteFormModal = ({
                         type="button"
                         onClick={onConfirm}
                         disabled={isDeleting}
-                        className="rounded-lg bg-alert-high px-4 py-2 text-sm font-semibold text-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="rounded-lg bg-alert-high px-4 py-2 text-sm font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         {isDeleting ? 'Deleting...' : 'Delete'}
                     </button>

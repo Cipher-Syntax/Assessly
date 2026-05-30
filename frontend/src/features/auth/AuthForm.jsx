@@ -16,7 +16,7 @@ const AuthLeftPanel = () => {
             <div className="relative z-10">
                 <div className="flex flex-col items-center gap-3">
                     <div className="flex items-center justify-center rounded-2xl">
-                        <ScanText className="text-white" size={360} />
+                        <ScanText className="text-primary-500" size={360} />
                     </div>
                     <div>
                         <p className="text-title font-semibold tracking-widest antialiased leading-relaxed uppercase mt-5">Assessly</p>
@@ -79,7 +79,7 @@ const AuthForm = ({ mode = 'login' }) => {
     const inputClassName =
         'mt-2 w-full rounded-lg border border-default bg-tertiary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none';
     const primaryButtonClass =
-        'w-full rounded-lg bg-primary-500 cursor-pointer px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60';
+        'w-full rounded-lg bg-primary-500 cursor-pointer px-4 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60';
     const secondaryButtonClass =
         'w-full rounded-lg border border-default cursor-pointer bg-tertiary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60';
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';

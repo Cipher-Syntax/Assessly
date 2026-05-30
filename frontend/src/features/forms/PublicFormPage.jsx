@@ -919,7 +919,7 @@ const PublicFormPage = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="inline-flex w-full items-center justify-center rounded-lg bg-primary-500 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-70"
+                                className="inline-flex w-full items-center justify-center rounded-lg bg-primary-500 px-4 py-3 text-sm font-semibold text-on-primary transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-70"
                             >
                                 {isSubmitting ? (
                                     <span className="inline-flex items-center gap-2">

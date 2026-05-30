@@ -31,9 +31,17 @@ const FormActionsMenu = ({ onRename, onDelete, onCopy }) => {
         };
     }, [isOpen]);
 
-    const runAction = (action) => {
+    // Update to accept the event and stop propagation
+    const runAction = (event, action) => {
+        event.stopPropagation();
         setIsOpen(false);
         action();
+    };
+
+    // New handler for the toggle button
+    const toggleMenu = (event) => {
+        event.stopPropagation();
+        setIsOpen((current) => !current);
     };
 
     return (
@@ -43,7 +51,7 @@ const FormActionsMenu = ({ onRename, onDelete, onCopy }) => {
                 aria-label="Open form actions"
                 aria-haspopup="menu"
                 aria-expanded={isOpen}
-                onClick={() => setIsOpen((current) => !current)}
+                onClick={toggleMenu}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-default bg-tertiary text-secondary transition hover:text-primary"
             >
                 <EllipsisVertical aria-hidden="true" size={18} />
@@ -57,7 +65,7 @@ const FormActionsMenu = ({ onRename, onDelete, onCopy }) => {
                     <button
                         type="button"
                         role="menuitem"
-                        onClick={() => runAction(onRename)}
+                        onClick={(e) => runAction(e, onRename)}
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-secondary transition hover:bg-secondary hover:text-primary"
                     >
                         <Pencil aria-hidden="true" size={15} />
@@ -66,7 +74,7 @@ const FormActionsMenu = ({ onRename, onDelete, onCopy }) => {
                     <button
                         type="button"
                         role="menuitem"
-                        onClick={() => runAction(onDelete)}
+                        onClick={(e) => runAction(e, onDelete)}
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger transition hover:bg-secondary"
                     >
                         <Trash2 aria-hidden="true" size={15} />
@@ -75,7 +83,7 @@ const FormActionsMenu = ({ onRename, onDelete, onCopy }) => {
                     <button
                         type="button"
                         role="menuitem"
-                        onClick={() => runAction(onCopy)}
+                        onClick={(e) => runAction(e, onCopy)}
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-secondary transition hover:bg-secondary hover:text-primary"
                     >
                         <Copy aria-hidden="true" size={15} />

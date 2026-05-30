@@ -217,7 +217,7 @@ const FormBuilderPage = () => {
                                         type="button"
                                         onClick={() => setActiveTab('builder')}
                                         className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${activeTab === 'builder'
-                                            ? 'bg-primary-500 text-primary'
+                                            ? 'bg-primary-500 text-on-primary'
                                             : 'bg-tertiary text-secondary hover:text-primary'
                                             }`}
                                     >
@@ -227,7 +227,7 @@ const FormBuilderPage = () => {
                                         type="button"
                                         onClick={() => setActiveTab('responses')}
                                         className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${activeTab === 'responses'
-                                            ? 'bg-primary-500 text-primary'
+                                            ? 'bg-primary-500 text-on-primary'
                                             : 'bg-tertiary text-secondary hover:text-primary'
                                             }`}
                                     >
@@ -270,7 +270,7 @@ const FormBuilderPage = () => {
                                             disabled={isReadOnly}
                                             className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${isReadOnly
                                                 ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                                                : 'bg-primary-500 text-primary hover:bg-primary-600'
+                                                : 'bg-primary-500 text-on-primary hover:bg-primary-600'
                                                 }`}
                                         >
                                             {isPublishing ? (
@@ -371,7 +371,7 @@ const FormBuilderPage = () => {
                 </div>
             </div>
             {isPublishConfirmOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4">
                     <div className="w-full max-w-md rounded-xl border border-default bg-secondary p-6 shadow-lg">
                         <h2 className="text-lg font-semibold text-primary">Publish form?</h2>
                         <p className="mt-2 text-sm text-secondary">
@@ -395,7 +395,7 @@ const FormBuilderPage = () => {
                                 disabled={isPublishing}
                                 className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${isPublishing
                                     ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                                    : 'bg-primary-500 text-primary hover:bg-primary-600'
+                                    : 'bg-primary-500 text-on-primary hover:bg-primary-600'
                                     }`}
                             >
                                 {isPublishing ? (

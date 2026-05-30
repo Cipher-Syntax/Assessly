@@ -30,7 +30,7 @@ const RenameFormModal = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-8">
             <form
                 onSubmit={handleSubmit}
                 className="w-full max-w-md rounded-lg border border-default bg-secondary shadow-lg"
@@ -68,7 +68,7 @@ const RenameFormModal = ({
                     <button
                         type="submit"
                         disabled={isSaving}
-                        className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         {isSaving ? 'Saving...' : 'Save'}
                     </button>
