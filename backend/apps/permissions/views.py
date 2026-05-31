@@ -23,7 +23,7 @@ class FormOwnerBaseView(APIView):
 	permission_classes = [IsAuthenticated, FormOwnerPermission]
 
 	def get_form(self, form_id):
-		form = get_object_or_404(Form, pk=form_id)
+		form = get_object_or_404(Form, public_id=form_id)
 		self.check_object_permissions(self.request, form)
 		return form
 

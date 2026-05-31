@@ -201,7 +201,7 @@ class FinalIntegrationFlowTests(APITestCase):
         )
 
         with self.assertNumQueries(2):
-            self.owner_client.get(f"/api/responses/forms/{form_obj.id}/")
+            self.owner_client.get(f"/api/responses/forms/{form_obj.public_id}/")
 
         editor = get_user_model().objects.create_user(
             email="editor@example.com",
@@ -212,4 +212,4 @@ class FinalIntegrationFlowTests(APITestCase):
         FormRole.objects.create(form=form_obj, user=editor, role=FormRole.Role.EDITOR)
 
         with self.assertNumQueries(2):
-            self.owner_client.get(f"/api/permissions/forms/{form_obj.id}/roles/")
+            self.owner_client.get(f"/api/permissions/forms/{form_obj.public_id}/roles/")

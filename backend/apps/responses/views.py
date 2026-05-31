@@ -81,7 +81,7 @@ class DraftView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request, form_id):
-		form = get_object_or_404(Form, pk=form_id)
+		form = get_object_or_404(Form, public_id=form_id)
 		_ensure_access(request, form, FormRole.Role.RESPONDER)
 		draft = response_service.get_user_draft(form, request.user)
 		if not draft:
@@ -93,7 +93,7 @@ class DraftView(APIView):
 		serializer = ResponseDraftSerializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
 
-		form = get_object_or_404(Form, pk=form_id)
+		form = get_object_or_404(Form, public_id=form_id)
 		token = _ensure_access(request, form, FormRole.Role.RESPONDER)
 		form_version = response_service.get_published_version_or_error(form)
 
@@ -124,7 +124,7 @@ class SubmitView(APIView):
 		serializer = ResponseSubmitSerializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
 
-		form = get_object_or_404(Form, pk=form_id)
+		form = get_object_or_404(Form, public_id=form_id)
 		user = request.user if getattr(request.user, "is_authenticated", False) else None
 		token = _ensure_access(request, form, FormRole.Role.RESPONDER)
 		form_version = response_service.get_published_version_or_error(form)
@@ -157,7 +157,7 @@ class AttemptsView(APIView):
 		serializer = ResponseAttemptSerializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
 
-		form = get_object_or_404(Form, pk=form_id)
+		form = get_object_or_404(Form, public_id=form_id)
 		user = request.user if getattr(request.user, "is_authenticated", False) else None
 		token = _ensure_access(request, form, FormRole.Role.RESPONDER)
 		form_version = response_service.get_published_version_or_error(form)
@@ -180,7 +180,7 @@ class ResponseListView(APIView):
 	permission_classes = [AllowAny]
 
 	def get(self, request, form_id):
-		form = get_object_or_404(Form, pk=form_id)
+		form = get_object_or_404(Form, public_id=form_id)
 		_ensure_access(request, form, FormRole.Role.EDITOR)
 		responses = (
 			FormResponse.objects.filter(

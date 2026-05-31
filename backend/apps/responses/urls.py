@@ -4,22 +4,22 @@ from apps.responses import views
 
 urlpatterns = [
     path(
-        "forms/<int:form_id>/draft/",
+        "forms/<uuid:form_id>/draft/",
         views.DraftView.as_view(),
         name="responses-draft",
     ),
     path(
-        "forms/<int:form_id>/submit/",
+        "forms/<uuid:form_id>/submit/",
         views.SubmitView.as_view(),
         name="responses-submit",
     ),
     path(
-        "forms/<int:form_id>/attempts/",
+        "forms/<uuid:form_id>/attempts/",
         views.AttemptsView.as_view(),
         name="responses-attempts",
     ),
     path(
-        "forms/<int:form_id>/",
+        "forms/<uuid:form_id>/",
         views.ResponseListView.as_view(),
         name="responses-list",
     ),

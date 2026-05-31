@@ -5,6 +5,7 @@ from apps.forms.services import form_service
 
 
 class FormListSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source="public_id", read_only=True)
     is_published = serializers.SerializerMethodField()
     published_version_id = serializers.IntegerField(read_only=True)
 
@@ -17,6 +18,7 @@ class FormListSerializer(serializers.ModelSerializer):
 
 
 class FormDetailSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source="public_id", read_only=True)
     draft_schema = serializers.SerializerMethodField()
     published_version = serializers.SerializerMethodField()
 
@@ -95,6 +97,7 @@ class PublishSerializer(serializers.Serializer):
 
 
 class FormPublicSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source="public_id", read_only=True)
     published_schema = serializers.SerializerMethodField()
 
     class Meta:
