@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Eye, EyeOff, ScanText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -9,6 +9,42 @@ import { useToast } from '../../app/useToast';
 
 const emailPattern = /\S+@\S+\.\S+/;
 const PENDING_OTP_EMAIL_KEY = 'assessly_pending_otp_email';
+
+const getErrorMessage = (error, fallback) => {
+    const data = error?.response?.data;
+
+    if (!data) {
+        return error?.message || fallback;
+    }
+
+    if (typeof data === 'string') {
+        return data;
+    }
+
+    if (data.detail) {
+        return data.detail;
+    }
+
+    if (data.code) {
+        return data.code.replace(/_/g, ' ');
+    }
+
+    if (Array.isArray(data.non_field_errors) && data.non_field_errors[0]) {
+        return data.non_field_errors[0];
+    }
+
+    const firstKey = Object.keys(data).find((key) => {
+        const value = data[key];
+        return (Array.isArray(value) && value[0]) || typeof value === 'string';
+    });
+
+    if (firstKey) {
+        const value = data[firstKey];
+        return Array.isArray(value) ? value[0] : value;
+    }
+
+    return fallback;
+};
 
 const AuthLeftPanel = () => {
     return (
@@ -83,6 +119,7 @@ const AuthForm = ({ mode = 'login' }) => {
     const secondaryButtonClass =
         'w-full rounded-lg border border-default cursor-pointer bg-tertiary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60';
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    const googleRedirectUri = `${window.location.origin}${location.pathname}`;
 
     const headingText = useMemo(() => {
         if (isOtpStep) {
@@ -160,41 +197,58 @@ const AuthForm = ({ mode = 'login' }) => {
         return () => window.clearInterval(timer);
     }, [resendCooldown]);
 
-    const getErrorMessage = (error, fallback) => {
-        const data = error?.response?.data;
+    const handleGoogleTokenLogin = useCallback(
+        async (accessToken) => {
+            if (!accessToken) {
+                const message = 'Google sign in failed.';
+                setFormError(message);
+                toast.error(message);
+                return;
+            }
 
-        if (!data) {
-            return error?.message || fallback;
+            setGoogleLoading(true);
+            setFormError('');
+            try {
+                const data = await googleLogin({ accessToken });
+                localStorage.setItem(ACCESS_TOKEN, data.access);
+                localStorage.setItem(REFRESH_TOKEN, data.refresh);
+                localStorage.removeItem(PENDING_OTP_EMAIL_KEY);
+                navigate('/dashboard');
+            } catch (error) {
+                const message = getErrorMessage(error, 'Google sign in failed.');
+                setFormError(message);
+                toast.error(message);
+            } finally {
+                setGoogleLoading(false);
+            }
+        },
+        [navigate, toast]
+    );
+
+    useEffect(() => {
+        const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+        const searchParams = new URLSearchParams(window.location.search);
+        const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+        const error = hashParams.get('error') || searchParams.get('error');
+        const errorDescription =
+            hashParams.get('error_description') || searchParams.get('error_description');
+
+        if (!accessToken && !error) {
+            return;
         }
 
-        if (typeof data === 'string') {
-            return data;
+        const cleanedUrl = `${window.location.pathname}${window.location.search}`;
+        window.history.replaceState({}, document.title, cleanedUrl);
+
+        if (error) {
+            const message = errorDescription || 'Google sign in failed.';
+            setFormError(message);
+            toast.error(message);
+            return;
         }
 
-        if (data.detail) {
-            return data.detail;
-        }
-
-        if (data.code) {
-            return data.code.replace(/_/g, ' ');
-        }
-
-        if (Array.isArray(data.non_field_errors) && data.non_field_errors[0]) {
-            return data.non_field_errors[0];
-        }
-
-        const firstKey = Object.keys(data).find((key) => {
-            const value = data[key];
-            return (Array.isArray(value) && value[0]) || typeof value === 'string';
-        });
-
-        if (firstKey) {
-            const value = data[firstKey];
-            return Array.isArray(value) ? value[0] : value;
-        }
-
-        return fallback;
-    };
+        handleGoogleTokenLogin(accessToken);
+    }, [handleGoogleTokenLogin, toast]);
 
     const updateField = (setter, field) => (event) => {
         const value = event.target.value;
@@ -440,25 +494,39 @@ const AuthForm = ({ mode = 'login' }) => {
         }
     };
 
-    const startGoogleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            setGoogleLoading(true);
-            setFormError('');
-            try {
-                const data = await googleLogin({ accessToken: tokenResponse.access_token });
-                localStorage.setItem(ACCESS_TOKEN, data.access);
-                localStorage.setItem(REFRESH_TOKEN, data.refresh);
-                localStorage.removeItem(PENDING_OTP_EMAIL_KEY);
-                navigate('/dashboard');
-            } catch (error) {
-                const message = getErrorMessage(error, 'Google sign in failed.');
-                setFormError(message);
-                toast.error(message);
-            } finally {
-                setGoogleLoading(false);
-            }
+    const startGoogleRedirectLogin = useGoogleLogin({
+        onSuccess: (tokenResponse) => {
+            handleGoogleTokenLogin(tokenResponse.access_token);
         },
         onError: () => {
+            const message = 'Google sign in failed.';
+            setFormError(message);
+            toast.error(message);
+        },
+        scope: 'openid email profile',
+        ux_mode: 'redirect',
+        redirect_uri: googleRedirectUri,
+    });
+
+    const startGoogleLogin = useGoogleLogin({
+        onSuccess: (tokenResponse) => {
+            handleGoogleTokenLogin(tokenResponse.access_token);
+        },
+        onError: () => {
+            const message = 'Google sign in failed.';
+            setFormError(message);
+            toast.error(message);
+        },
+        onNonOAuthError: (nonOAuthError) => {
+            if (nonOAuthError?.type === 'popup_failed_to_open') {
+                startGoogleRedirectLogin();
+                return;
+            }
+
+            if (nonOAuthError?.type === 'popup_closed') {
+                return;
+            }
+
             const message = 'Google sign in failed.';
             setFormError(message);
             toast.error(message);
