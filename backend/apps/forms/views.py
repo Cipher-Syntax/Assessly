@@ -24,6 +24,8 @@ from apps.permissions.services import token_service
 class FormViewSet(viewsets.ModelViewSet):
     queryset = Form.objects.select_related("draft_version", "published_version")
     permission_classes = [IsAuthenticated, FormAccessPermission]
+    lookup_field = "public_id"
+    lookup_value_regex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
     def get_queryset(self):
         user = self.request.user
@@ -84,7 +86,7 @@ class FormPublicView(APIView):
     def get(self, request, form_id):
         form = get_object_or_404(
             Form.objects.select_related("published_version"),
-            pk=form_id,
+            public_id=form_id,
         )
 
         if not form.published_version_id:

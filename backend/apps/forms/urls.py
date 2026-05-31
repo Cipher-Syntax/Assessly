@@ -7,6 +7,6 @@ router = DefaultRouter()
 router.register(r"", FormViewSet, basename="forms")
 
 urlpatterns = [
-    path("<int:form_id>/public/", FormPublicView.as_view(), name="forms-public"),
+    path("<uuid:form_id>/public/", FormPublicView.as_view(), name="forms-public"),
     path("", include(router.urls)),
 ]
