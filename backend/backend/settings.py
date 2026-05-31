@@ -253,3 +253,4 @@ if USE_CONSOLE_EMAIL:
 if DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
     if EMAIL_HOST in ('localhost', '127.0.0.1') and EMAIL_PORT == 25:
         EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
