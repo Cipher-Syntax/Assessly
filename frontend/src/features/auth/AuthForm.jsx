@@ -103,6 +103,7 @@ const AuthForm = ({ mode = 'login' }) => {
     const [resendCooldown, setResendCooldown] = useState(0);
     const [resending, setResending] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
+    const [needsGoogleConsent, setNeedsGoogleConsent] = useState(false);
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
     const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
@@ -210,11 +211,24 @@ const AuthForm = ({ mode = 'login' }) => {
             setFormError('');
             try {
                 const data = await googleLogin({ accessToken });
+                setNeedsGoogleConsent(false);
                 localStorage.setItem(ACCESS_TOKEN, data.access);
                 localStorage.setItem(REFRESH_TOKEN, data.refresh);
                 localStorage.removeItem(PENDING_OTP_EMAIL_KEY);
                 navigate('/dashboard');
             } catch (error) {
+                const rawCode = error?.response?.data?.code;
+                const errorCode = Array.isArray(rawCode) ? rawCode[0] : rawCode;
+
+                if (errorCode === 'google_signup_required') {
+                    const message =
+                        'Google needs email access. Please continue with Google again and allow email permission.';
+                    setNeedsGoogleConsent(true);
+                    setFormError(message);
+                    toast.error(message);
+                    return;
+                }
+
                 const message = getErrorMessage(error, 'Google sign in failed.');
                 setFormError(message);
                 toast.error(message);
@@ -508,6 +522,21 @@ const AuthForm = ({ mode = 'login' }) => {
         redirect_uri: googleRedirectUri,
     });
 
+    const startGoogleConsentRedirectLogin = useGoogleLogin({
+        onSuccess: (tokenResponse) => {
+            handleGoogleTokenLogin(tokenResponse.access_token);
+        },
+        onError: () => {
+            const message = 'Google sign in failed.';
+            setFormError(message);
+            toast.error(message);
+        },
+        scope: 'openid email profile',
+        ux_mode: 'redirect',
+        prompt: 'consent',
+        redirect_uri: googleRedirectUri,
+    });
+
     const startGoogleLogin = useGoogleLogin({
         onSuccess: (tokenResponse) => {
             handleGoogleTokenLogin(tokenResponse.access_token);
@@ -534,6 +563,33 @@ const AuthForm = ({ mode = 'login' }) => {
         scope: 'openid email profile',
     });
 
+    const startGoogleConsentLogin = useGoogleLogin({
+        onSuccess: (tokenResponse) => {
+            handleGoogleTokenLogin(tokenResponse.access_token);
+        },
+        onError: () => {
+            const message = 'Google sign in failed.';
+            setFormError(message);
+            toast.error(message);
+        },
+        onNonOAuthError: (nonOAuthError) => {
+            if (nonOAuthError?.type === 'popup_failed_to_open') {
+                startGoogleConsentRedirectLogin();
+                return;
+            }
+
+            if (nonOAuthError?.type === 'popup_closed') {
+                return;
+            }
+
+            const message = 'Google sign in failed.';
+            setFormError(message);
+            toast.error(message);
+        },
+        scope: 'openid email profile',
+        prompt: 'consent',
+    });
+
     const handleGoogleSignIn = () => {
         if (!googleClientId) {
             const message = 'Missing Google client ID. Set VITE_GOOGLE_CLIENT_ID in frontend/.env.';
@@ -541,6 +597,11 @@ const AuthForm = ({ mode = 'login' }) => {
             toast.error(message);
             return;
         }
+        if (needsGoogleConsent) {
+            startGoogleConsentLogin();
+            return;
+        }
+
         startGoogleLogin();
     };
 
