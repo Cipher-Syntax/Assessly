@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'anymail',
 ]
 
 REST_FRAMEWORK = {
@@ -234,23 +235,32 @@ CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=boo
 BACKEND_URL = config('BACKEND_URL')
 FRONTEND_URL = config('FRONTEND_URL')
 
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@noir-eclipse.local')
+# EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+# DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@noir-eclipse.local')
 
-# Local dev fallback: avoid 500 errors on register/reset when no SMTP server is running.
-EMAIL_HOST = config('EMAIL_HOST', default='localhost')
-EMAIL_PORT = config('EMAIL_PORT', default=25, cast=int)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
-EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+# # Local dev fallback: avoid 500 errors on register/reset when no SMTP server is running.
+# EMAIL_HOST = config('EMAIL_HOST', default='localhost')
+# EMAIL_PORT = config('EMAIL_PORT', default=25, cast=int)
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+# EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
+# EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 
-# Use console backend by default in local development.
-USE_CONSOLE_EMAIL = config('USE_CONSOLE_EMAIL', default=DEBUG, cast=bool)
-if USE_CONSOLE_EMAIL:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# # Use console backend by default in local development.
+# USE_CONSOLE_EMAIL = config('USE_CONSOLE_EMAIL', default=DEBUG, cast=bool)
+# if USE_CONSOLE_EMAIL:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-if DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
-    if EMAIL_HOST in ('localhost', '127.0.0.1') and EMAIL_PORT == 25:
-        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# if DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
+#     if EMAIL_HOST in ('localhost', '127.0.0.1') and EMAIL_PORT == 25:
+#         EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# --- EMAIL CONFIGURATION (HARDCODED ANYMAIL TO FIX WINERROR 10061) ---
+ANYMAIL = {
+    "SENDINBLUE_API_KEY": config('ANYMAIL_API_KEY', default=''),
+}
+# Hardcoded to force Django to use Anymail API instead of default localhost SMTP
+EMAIL_BACKEND = 'anymail.backends.sendinblue.EmailBackend'
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+ADMIN_SUPPORT = config('ADMIN_SUPPORT')
 
