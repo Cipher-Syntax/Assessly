@@ -20,7 +20,7 @@ import PageSpinner from '../../components/ui/PageSpinner';
 import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../app/useToast';
 import AiGenerateModal from './components/AiGenerateModal';
-import { authService } from '../../auth/services/authService';
+import api from '../../services/api';
 
 const FormBuilderPage = () => {
     const { id } = useParams();
@@ -98,26 +98,12 @@ const FormBuilderPage = () => {
     const handleAiGenerate = async (prompt) => {
         setIsAiGenerating(true);
         try {
-            const token = authService.getToken();
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/forms/${id}/ai_generate/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ prompt })
-            });
-            
-            if (response.ok) {
-                toast.success("AI generated questions successfully!");
-                // Give it a brief moment to finish saving locally before reload
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
-            } else {
-                toast.error("Failed to generate questions with AI.");
-                setIsAiGenerating(false);
-            }
+            await api.post(`/api/forms/${id}/ai_generate/`, { prompt });
+            toast.success("AI generated questions successfully!");
+            // Give it a brief moment to finish saving locally before reload
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         } catch (error) {
             toast.error("Error generating questions.");
             setIsAiGenerating(false);
