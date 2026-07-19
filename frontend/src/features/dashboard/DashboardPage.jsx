@@ -30,12 +30,16 @@ const FormCardSkeleton = () => (
 
 const DashboardPage = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const searchQuery = (searchParams.get('q') || '').toLowerCase();
+    const pageQuery = parseInt(searchParams.get('page') || '1', 10);
     
     const isMountedRef = useRef(true);
     const [status, setStatus] = useState('loading');
     const [forms, setForms] = useState([]);
+    const [totalCount, setTotalCount] = useState(0);
+    const [hasNext, setHasNext] = useState(false);
+    const [hasPrevious, setHasPrevious] = useState(false);
     const [responseCounts, setResponseCounts] = useState({});
     const [errorMessage, setErrorMessage] = useState('');
     const [isCreating, setIsCreating] = useState(false);
@@ -56,13 +60,19 @@ const DashboardPage = () => {
             setErrorMessage('');
             setResponseCounts({});
 
-            const { forms: ownedForms, error } = await fetchForms();
+            const { forms: ownedForms, count, next, previous, error } = await fetchForms({
+                search: searchQuery,
+                page: pageQuery
+            });
 
             if (!isMounted) {
                 return;
             }
 
             setForms(ownedForms);
+            setTotalCount(count);
+            setHasNext(Boolean(next));
+            setHasPrevious(Boolean(previous));
 
             if (error) {
                 setErrorMessage(error);
@@ -109,7 +119,7 @@ const DashboardPage = () => {
             isMounted = false;
             isMountedRef.current = false;
         };
-    }, []);
+    }, [searchQuery, pageQuery]);
 
     const handleOpenRename = (form) => {
         setRenameTarget(form);
@@ -226,7 +236,13 @@ const DashboardPage = () => {
         navigate(`/forms/${id}/builder`);
     };
 
-    const filteredForms = forms.filter(form => form.title.toLowerCase().includes(searchQuery));
+    const handlePageChange = (newPage) => {
+        setSearchParams(prev => {
+            const nextParams = new URLSearchParams(prev);
+            nextParams.set('page', newPage.toString());
+            return nextParams;
+        });
+    };
 
     return (
         <DashboardLayout>
@@ -272,21 +288,21 @@ const DashboardPage = () => {
                     </div>
                 )}
 
-                {status === 'ready' && forms.length === 0 && (
+                {status === 'ready' && forms.length === 0 && !searchQuery && (
                     <div className="flex flex-col items-center justify-center py-12 text-secondary">
                         <p>No forms yet. Click "Blank" above to create one.</p>
                     </div>
                 )}
 
-                {status === 'ready' && forms.length > 0 && filteredForms.length === 0 && (
+                {status === 'ready' && forms.length === 0 && searchQuery && (
                     <div className="flex flex-col items-center justify-center py-12 text-secondary">
                         <p>No forms match your search.</p>
                     </div>
                 )}
 
-                {status === 'ready' && filteredForms.length > 0 && (
+                {status === 'ready' && forms.length > 0 && (
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        {filteredForms.map((form) => (
+                        {forms.map((form) => (
                             <FormCard
                                 key={form.id}
                                 form={form}
@@ -296,6 +312,30 @@ const DashboardPage = () => {
                                 onClick={() => handleRedirectForm(form.id)}
                             />
                         ))}
+                    </div>
+                )}
+                
+                {status === 'ready' && (hasPrevious || hasNext) && (
+                    <div className="mt-8 flex items-center justify-between border-t border-default pt-4">
+                        <p className="text-sm text-secondary">
+                            Showing {(pageQuery - 1) * 12 + 1} to {Math.min(pageQuery * 12, totalCount)} of {totalCount} forms
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => handlePageChange(pageQuery - 1)}
+                                disabled={!hasPrevious}
+                                className="px-3 py-1 text-sm font-medium text-primary bg-secondary border border-default rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-tertiary transition-colors"
+                            >
+                                Previous
+                            </button>
+                            <button 
+                                onClick={() => handlePageChange(pageQuery + 1)}
+                                disabled={!hasNext}
+                                className="px-3 py-1 text-sm font-medium text-primary bg-secondary border border-default rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-tertiary transition-colors"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

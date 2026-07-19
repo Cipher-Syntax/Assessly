@@ -36,24 +36,32 @@ const normalizeForm = (form) => {
     };
 };
 
-export const fetchForms = async () => {
+export const fetchForms = async (params = {}) => {
     try {
-        const response = await api.get('/api/forms/');
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page);
+        if (params.search) queryParams.append('search', params.search);
+
+        const response = await api.get(`/api/forms/?${queryParams.toString()}`);
         const payload = response?.data;
 
-        if (!Array.isArray(payload)) {
-            return {
-                forms: [],
-                error: 'Unexpected response while loading forms.',
-            };
-        }
+        // Check for DRF paginated response
+        const isPaginated = payload && Array.isArray(payload.results);
+        const rawForms = isPaginated ? payload.results : (Array.isArray(payload) ? payload : []);
 
-        const forms = payload.map(normalizeForm).filter(Boolean);
+        const forms = rawForms.map(normalizeForm).filter(Boolean);
 
-        return { forms, error: null };
+        return { 
+            forms, 
+            count: isPaginated ? payload.count : forms.length,
+            next: isPaginated ? payload.next : null,
+            previous: isPaginated ? payload.previous : null,
+            error: null 
+        };
     } catch {
         return {
             forms: [],
+            count: 0,
             error: 'Unable to load forms right now.',
         };
     }

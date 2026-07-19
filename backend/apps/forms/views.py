@@ -1,10 +1,16 @@
 from django.db.models import Q
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 from apps.forms.models import Form
 from apps.forms.permissions import FormAccessPermission, FormOwnerPermission, get_editor_form_ids
@@ -26,6 +32,12 @@ class FormViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, FormAccessPermission]
     lookup_field = "public_id"
     lookup_value_regex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["title", "description"]
+    ordering_fields = ["created_at", "updated_at", "title"]
+    ordering = ["-updated_at"]
 
     def get_queryset(self):
         user = self.request.user
@@ -59,18 +71,6 @@ class FormViewSet(viewsets.ModelViewSet):
         if self.action == "publish":
             return PublishSerializer
         return FormDetailSerializer
-
-    def list(self, request, *args, **kwargs):
-        queryset = (
-            Form.objects.filter(owner=request.user)
-            .select_related("draft_version", "published_version")
-        )
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def publish(self, request, *args, **kwargs):

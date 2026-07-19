@@ -44,21 +44,6 @@ const getToastToneClass = (tone) => {
     return 'bg-alert-low';
 };
 
-const VIOLATION_TOASTS = [
-    {
-        message: 'Warning: tab switch detected.',
-        tone: 'low',
-    },
-    {
-        message: 'Final warning: further tab switches will submit your response.',
-        tone: 'mid',
-    },
-    {
-        message: 'Auto-submitting due to repeated focus loss.',
-        tone: 'high',
-    },
-];
-
 const isEmptyValue = (value) => {
     if (value === null || value === undefined) {
         return true;
@@ -440,20 +425,23 @@ const PublicFormPage = () => {
     }, [pushToast, stopMonitoring]);
 
     const registerViolation = useCallback(() => {
-        if (violationCountRef.current >= VIOLATION_TOASTS.length) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const MAX_VIOLATIONS = isMobile ? 5 : 3;
+
+        if (violationCountRef.current >= MAX_VIOLATIONS) {
             return;
         }
 
         const nextCount = violationCountRef.current + 1;
         violationCountRef.current = nextCount;
 
-        const toastConfig = VIOLATION_TOASTS[nextCount - 1];
-        if (toastConfig) {
-            pushToast(toastConfig.message, toastConfig.tone);
-        }
-
-        if (nextCount === VIOLATION_TOASTS.length) {
+        if (nextCount === MAX_VIOLATIONS) {
+            pushToast('Auto-submitting due to repeated focus loss.', 'high');
             handleAutoSubmit();
+        } else if (nextCount === MAX_VIOLATIONS - 1) {
+            pushToast('Final warning: further tab switches will submit your response.', 'mid');
+        } else {
+            pushToast(`Warning: focus loss detected. (${nextCount}/${MAX_VIOLATIONS})`, 'low');
         }
     }, [handleAutoSubmit, pushToast]);
 
