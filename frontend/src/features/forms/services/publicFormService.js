@@ -71,12 +71,14 @@ const normalizePublicForm = (payload) => {
     const title = isNonEmptyString(payload.title) ? payload.title : 'Untitled form';
     const description = typeof payload.description === 'string' ? payload.description : '';
     const publishedSchema = normalizePublishedSchema(payload.published_schema);
+    const settings = isRecord(payload.settings) ? payload.settings : {};
 
     return {
         id,
         title,
         description,
         publishedSchema,
+        settings,
     };
 };
 

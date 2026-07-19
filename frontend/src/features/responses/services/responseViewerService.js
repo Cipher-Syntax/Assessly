@@ -44,6 +44,7 @@ const normalizeResponseDetail = (payload) => {
     const userId = payload.user_id ?? null;
     const sessionUuid = typeof payload.session_uuid === 'string' ? payload.session_uuid : null;
     const formVersionId = payload.form_version_id ?? null;
+    const events = Array.isArray(payload.events) ? payload.events : [];
 
     return {
         id,
@@ -54,6 +55,7 @@ const normalizeResponseDetail = (payload) => {
         user_id: userId,
         session_uuid: sessionUuid,
         form_version_id: formVersionId,
+        events,
     };
 };
 

@@ -407,9 +407,15 @@ const PublicFormPage = () => {
                 sessionUuid: currentSessionUuid,
                 sessionId: currentSessionId,
                 token: currentToken,
+                isAutoSubmit: true,
             });
 
         if (serverErrors && Object.keys(serverErrors).length > 0) {
+            if (serverErrors.session_id) {
+                localStorage.removeItem(`draftSession:${formId}`);
+                window.location.reload();
+                return;
+            }
             setFieldErrors(serverErrors);
         }
 
@@ -841,6 +847,11 @@ const PublicFormPage = () => {
             });
 
         if (serverErrors && Object.keys(serverErrors).length > 0) {
+            if (serverErrors.session_id) {
+                localStorage.removeItem(`draftSession:${form.id}`);
+                window.location.reload();
+                return;
+            }
             setFieldErrors(serverErrors);
         }
 

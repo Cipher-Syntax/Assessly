@@ -55,7 +55,10 @@ def _resolve_session(form, form_version, user, session_uuid, session_id, token, 
 			raise ValidationError({"session_uuid": "Session UUID does not match."})
 		expected_hash = token_service.hash_token(token) if token else None
 		if session.access_token_hash != expected_hash:
-			raise ValidationError({"session_id": "Session token mismatch."})
+			# If the authenticated user is the one who created the session, allow them to continue
+			# even if the token is missing (e.g., they copied the public link after previewing).
+			if not (user and session.user_id == user.id):
+				raise ValidationError({"session_id": "Session token mismatch."})
 
 		if form_version and session.form_version_id != form_version.id:
 			session.form_version = form_version
@@ -147,6 +150,7 @@ class SubmitView(APIView):
 			form_version,
 			session,
 			serializer.validated_data["answers"],
+			is_auto_submit=serializer.validated_data.get("is_auto_submit", False)
 		)
 		output = ResponseSubmitSerializer(response_obj)
 		return Response(output.data, status=status.HTTP_201_CREATED)

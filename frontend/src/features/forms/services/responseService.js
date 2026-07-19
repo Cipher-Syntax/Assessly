@@ -127,6 +127,7 @@ export const submitResponse = async ({
     sessionUuid,
     sessionId,
     token,
+    isAutoSubmit,
 }) => {
     if (!formId) {
         return { response: null, error: 'Missing form id.', fieldErrors: {} };
@@ -136,6 +137,7 @@ export const submitResponse = async ({
         const payload = {
             answers,
             session_uuid: sessionUuid,
+            is_auto_submit: isAutoSubmit,
         };
 
         if (sessionId) {

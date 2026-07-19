@@ -26,6 +26,7 @@ class ResponseSubmitSerializer(serializers.Serializer):
     answers = serializers.JSONField()
     session_uuid = serializers.UUIDField()
     session_id = serializers.IntegerField(required=False, allow_null=True)
+    is_auto_submit = serializers.BooleanField(required=False, default=False)
 
     def to_representation(self, instance):
         if isinstance(instance, Response):
@@ -61,6 +62,7 @@ class ResponseListSerializer(serializers.ModelSerializer):
 
 class ResponseDetailSerializer(serializers.ModelSerializer):
     session_uuid = serializers.SerializerMethodField()
+    events = serializers.SerializerMethodField()
 
     class Meta:
         model = Response
@@ -73,12 +75,19 @@ class ResponseDetailSerializer(serializers.ModelSerializer):
             "form_version_id",
             "user_id",
             "session_uuid",
+            "events",
         ]
 
     def get_session_uuid(self, obj):
         if obj.session_id:
             return obj.session.session_uuid
         return None
+
+    def get_events(self, obj):
+        if obj.session_id:
+            events = obj.session.events.all().order_by('occurred_at')
+            return ResponseEventSerializer(events, many=True).data
+        return []
 
 
 class ResponseEventSerializer(serializers.ModelSerializer):

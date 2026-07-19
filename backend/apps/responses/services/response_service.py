@@ -101,7 +101,7 @@ def start_attempt(form, user, form_version, session):
     return session
 
 
-def submit_response(form, user, form_version, session, answers):
+def submit_response(form, user, form_version, session, answers, is_auto_submit=False):
     settings_obj = get_or_create_settings(form)
     if not settings_obj.allow_multiple_submissions:
         if user and getattr(user, "is_authenticated", False):
@@ -133,7 +133,8 @@ def submit_response(form, user, form_version, session, answers):
                     }
                 )
 
-    validation_service.validate_answers(form_version.schema, answers)
+    if not is_auto_submit:
+        validation_service.validate_answers(form_version.schema, answers)
 
     with transaction.atomic():
         draft = None
