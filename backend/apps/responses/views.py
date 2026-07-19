@@ -4,6 +4,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.http import HttpResponse
+import csv
 
 from apps.forms.models import Form
 from apps.forms.permissions import get_request_token, resolve_access
@@ -226,3 +228,53 @@ class ResponseEventView(APIView):
 		)
 		output = ResponseEventSerializer(event)
 		return Response(output.data, status=status.HTTP_201_CREATED)
+
+class ResponseExportView(APIView):
+	permission_classes = [AllowAny]
+
+	def get(self, request, form_id):
+		form = get_object_or_404(Form, public_id=form_id)
+		_ensure_access(request, form, FormRole.Role.EDITOR)
+
+		responses = (
+			FormResponse.objects.filter(
+				form=form,
+				status=FormResponse.Status.SUBMITTED,
+			)
+			.select_related("form_version")
+			.order_by("created_at")
+		)
+
+		response = HttpResponse(
+			content_type="text/csv",
+			headers={"Content-Disposition": f'attachment; filename="responses_{form.public_id}.csv"'},
+		)
+
+		writer = csv.writer(response)
+
+		if not responses.exists():
+			writer.writerow(["No responses found"])
+			return response
+
+		published_schema = form.published_version.schema if form.published_version else {}
+		sections = published_schema.get("sections", [])
+
+		questions_map = {}
+		for section in sections:
+			for question in section.get("questions", []):
+				questions_map[question["id"]] = question.get("label", "Untitled Question")
+
+		header = ["Response ID", "Submitted At"] + list(questions_map.values())
+		writer.writerow(header)
+
+		for r in responses:
+			answers = r.answers or {}
+			row = [r.id, r.submitted_at.isoformat() if r.submitted_at else r.created_at.isoformat()]
+			for q_id in questions_map.keys():
+				ans = answers.get(q_id, "")
+				if isinstance(ans, list):
+					ans = ", ".join(ans)
+				row.append(str(ans))
+			writer.writerow(row)
+
+		return response

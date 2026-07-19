@@ -1,8 +1,24 @@
-import { Type, AlignJustify, CircleDot, CheckSquare, List, SplitSquareVertical } from 'lucide-react';
+import { Type, AlignJustify, CircleDot, CheckSquare, List, SplitSquareVertical, Sparkles } from 'lucide-react';
 
-const AddQuestionBar = ({ onAdd, onAddSection, isDisabled = false }) => {
+const AddQuestionBar = ({ onAdd, onAddSection, onAiGenerate, isDisabled = false }) => {
     return (
         <div className="flex w-fit gap-2 rounded-xl border border-default bg-tertiary p-2 shadow-sm md:flex-col md:shadow-md">
+            <button
+                type="button"
+                onClick={onAiGenerate}
+                disabled={isDisabled}
+                title="Generate with AI"
+                aria-label="Generate with AI"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${isDisabled
+                    ? 'text-muted opacity-70 cursor-not-allowed'
+                    : 'text-[var(--primary-500)] hover:bg-[var(--primary-500)] hover:text-white'
+                    }`}
+            >
+                <Sparkles size={20} />
+            </button>
+
+            <div className="mx-2 h-px w-auto bg-default md:mx-auto md:h-auto md:w-5 md:border-t" />
+
             <button
                 type="button"
                 onClick={() => onAdd('short_text')}

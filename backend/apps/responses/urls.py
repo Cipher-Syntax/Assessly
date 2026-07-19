@@ -24,6 +24,11 @@ urlpatterns = [
         name="responses-list",
     ),
     path(
+        "forms/<uuid:form_id>/export/csv/",
+        views.ResponseExportView.as_view(),
+        name="responses-export-csv",
+    ),
+    path(
         "<int:response_id>/",
         views.ResponseDetailView.as_view(),
         name="responses-detail",

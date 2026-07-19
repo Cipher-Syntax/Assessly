@@ -19,6 +19,8 @@ import SettingsPanel from './components/SettingsPanel';
 import PageSpinner from '../../components/ui/PageSpinner';
 import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../app/useToast';
+import AiGenerateModal from './components/AiGenerateModal';
+import { authService } from '../../auth/services/authService';
 
 const FormBuilderPage = () => {
     const { id } = useParams();
@@ -44,6 +46,8 @@ const FormBuilderPage = () => {
     const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('builder');
+    const [isAiGenerateOpen, setIsAiGenerateOpen] = useState(false);
+    const [isAiGenerating, setIsAiGenerating] = useState(false);
     const toast = useToast();
     const hasLoadedRef = useRef(false);
     const lastSaveToastRef = useRef(0);
@@ -89,6 +93,35 @@ const FormBuilderPage = () => {
 
     const handleDragCancel = () => {
         setActiveQuestionId(null);
+    };
+
+    const handleAiGenerate = async (prompt) => {
+        setIsAiGenerating(true);
+        try {
+            const token = authService.getToken();
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/forms/${id}/ai_generate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ prompt })
+            });
+            
+            if (response.ok) {
+                toast.success("AI generated questions successfully!");
+                // Give it a brief moment to finish saving locally before reload
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                toast.error("Failed to generate questions with AI.");
+                setIsAiGenerating(false);
+            }
+        } catch (error) {
+            toast.error("Error generating questions.");
+            setIsAiGenerating(false);
+        }
     };
 
     const handleDragEnd = (event) => {
@@ -368,6 +401,7 @@ const FormBuilderPage = () => {
                                             <AddQuestionBar 
                                                 onAdd={(type) => actions.addQuestion(currentSectionId, type)} 
                                                 onAddSection={actions.addSection}
+                                                onAiGenerate={() => setIsAiGenerateOpen(true)}
                                                 isDisabled={isReadOnly} 
                                             />
                                         </div>
@@ -433,6 +467,12 @@ const FormBuilderPage = () => {
                     onClose={() => setIsShareOpen(false)}
                 />
             )}
+            <AiGenerateModal
+                isOpen={isAiGenerateOpen}
+                onClose={() => setIsAiGenerateOpen(false)}
+                onGenerate={handleAiGenerate}
+                isGenerating={isAiGenerating}
+            />
             <DragOverlay>
                 {activeQuestion ? (
                     <QuestionCardPreview question={activeQuestion} />

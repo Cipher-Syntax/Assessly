@@ -228,6 +228,12 @@ const PublicFormPage = () => {
 
     const isAntiCheatEnabled = form?.settings?.is_anti_cheat_enabled === true;
     
+    // Theme
+    const themePrimaryColor = form?.settings?.theme_primary_color || null;
+    const themeHeaderImage = form?.settings?.theme_header_image || null;
+    
+    const containerStyle = themePrimaryColor ? { '--primary-500': themePrimaryColor } : {};
+    
     // Calculate time limit in seconds
     const timeLimit = useMemo(() => {
         if (!form?.settings?.is_timer_enabled) return null;
@@ -888,7 +894,7 @@ const PublicFormPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-primary text-primary pb-10">
+        <div className="min-h-screen bg-primary text-primary pb-10" style={containerStyle}>
             {timeLimit && timeLeft !== null && !isSubmitted && (
                 <div className="fixed top-0 left-0 right-0 z-50 flex h-12 items-center justify-center bg-[var(--primary-500)] text-on-primary font-medium shadow-md transition-colors">
                     <span className="text-sm">Time Remaining: {formatTime(timeLeft)}</span>
@@ -917,7 +923,12 @@ const PublicFormPage = () => {
                 )}
             </header>
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 pt-10 sm:px-6">
-                <div className="rounded-xl border border-default bg-secondary p-6">
+                {themeHeaderImage && (
+                    <div className="rounded-xl overflow-hidden shadow-sm h-48 w-full border border-default">
+                        <img src={themeHeaderImage} alt="Form Cover" className="w-full h-full object-cover" />
+                    </div>
+                )}
+                <div className="rounded-xl border border-default bg-secondary p-6" style={themePrimaryColor ? { borderTop: `8px solid ${themePrimaryColor}` } : {}}>
                     <h1 className="text-title font-semibold text-primary">
                         {form?.title || 'Untitled form'}
                     </h1>
