@@ -19,6 +19,8 @@ const SectionCard = ({
     onUpdateQuestion,
     onDeleteQuestion,
     onMoveQuestion,
+    isActive,
+    onActivate,
 }) => {
     const { setNodeRef } = useDroppable({
         id: `section-${section.id}`,
@@ -44,7 +46,11 @@ const SectionCard = ({
     };
 
     return (
-        <section className="rounded-xl border border-default bg-secondary p-6">
+        <section 
+            className={`relative rounded-xl border bg-secondary p-6 transition-colors ${isActive ? 'border-primary-500 shadow-sm' : 'border-default'}`}
+            onClick={onActivate}
+            onFocusCapture={onActivate}
+        >
             <div className="flex flex-col gap-5">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <span className="rounded-full border border-default bg-tertiary px-3 py-1 text-xs text-secondary">
@@ -77,14 +83,13 @@ const SectionCard = ({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="text-xs text-secondary">Section title</label>
                     <input
                         type="text"
                         value={section.title}
                         onChange={handleTitleChange}
                         placeholder="Untitled section"
                         disabled={!isEditing}
-                        className="w-full rounded-lg border border-default bg-tertiary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                        className="w-full bg-transparent border-b border-default px-0 py-2 text-3xl font-normal text-primary placeholder:text-muted focus:border-primary-500 focus:border-b-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
                     />
                     {sectionError && (
                         <p className="text-xs text-danger">{sectionError}</p>
@@ -92,14 +97,13 @@ const SectionCard = ({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="text-xs text-secondary">Description</label>
                     <textarea
                         value={section.description}
                         onChange={handleDescriptionChange}
-                        placeholder="Describe this section"
+                        placeholder="Form description"
                         rows={2}
                         disabled={!isEditing}
-                        className="w-full resize-none rounded-lg border border-default bg-tertiary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                        className="w-full resize-none bg-transparent border-b border-default px-0 py-2 text-sm text-secondary placeholder:text-muted focus:border-primary-500 focus:border-b-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
                     />
                 </div>
 
@@ -124,11 +128,6 @@ const SectionCard = ({
                         ))}
                     </div>
                 </SortableContext>
-
-                <AddQuestionBar
-                    onAdd={(type) => onAddQuestion(section.id, type)}
-                    isDisabled={!isEditing}
-                />
             </div>
         </section>
     );

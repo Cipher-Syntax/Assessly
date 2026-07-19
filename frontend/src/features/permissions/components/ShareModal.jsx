@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { X, Link as LinkIcon, UserPlus, Settings, Check, Copy, Trash2 } from 'lucide-react';
 import {
     assignRole,
     createToken,
@@ -50,34 +51,23 @@ const formatTimestamp = (value, fallback) => {
 
 const AccessModeSection = ({ settings, isSaving, error, onChange }) => {
     return (
-        <section className="rounded-lg border border-default bg-tertiary p-4">
-            <h3 className="text-sm font-semibold text-primary">Access modes</h3>
-            <p className="mt-2 text-xs text-secondary">
-                Configure how editors and responders can access this form.
-            </p>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <label className="flex flex-col gap-2 text-xs text-secondary">
-                    Editor access
-                    <select
-                        value={settings.editor_access_mode}
-                        onChange={(event) => onChange('editor_access_mode', event.target.value)}
-                        disabled={isSaving}
-                        className="rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                        {ACCESS_MODE_OPTIONS.editor.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="flex flex-col gap-2 text-xs text-secondary">
-                    Responder access
+        <section className="py-2">
+            <div className="flex items-center gap-2 mb-4">
+                <Settings size={18} className="text-secondary" />
+                <h3 className="text-base font-medium text-primary">General access</h3>
+            </div>
+            
+            <div className="ml-7 flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className="text-sm font-medium text-primary">Responders</div>
+                        <div className="text-xs text-secondary">Who can fill out this form</div>
+                    </div>
                     <select
                         value={settings.responder_access_mode}
                         onChange={(event) => onChange('responder_access_mode', event.target.value)}
                         disabled={isSaving}
-                        className="rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                        className="rounded-md border border-default bg-transparent px-3 py-1.5 text-sm text-primary focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
                     >
                         {ACCESS_MODE_OPTIONS.responder.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -85,9 +75,28 @@ const AccessModeSection = ({ settings, isSaving, error, onChange }) => {
                             </option>
                         ))}
                     </select>
-                </label>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className="text-sm font-medium text-primary">Editors</div>
+                        <div className="text-xs text-secondary">Who can modify this form</div>
+                    </div>
+                    <select
+                        value={settings.editor_access_mode}
+                        onChange={(event) => onChange('editor_access_mode', event.target.value)}
+                        disabled={isSaving}
+                        className="rounded-md border border-default bg-transparent px-3 py-1.5 text-sm text-primary focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                    >
+                        {ACCESS_MODE_OPTIONS.editor.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
-            {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+            {error && <p className="mt-3 ml-7 text-xs text-danger">{error}</p>}
         </section>
     );
 };
@@ -104,28 +113,27 @@ const PeopleSection = ({
     onRemove,
 }) => {
     return (
-        <section className="rounded-lg border border-default bg-tertiary p-4">
-            <h3 className="text-sm font-semibold text-primary">People</h3>
-            <p className="mt-2 text-xs text-secondary">
-                Assign editor or responder access by email.
-            </p>
-            <div className="mt-4 flex flex-wrap items-end gap-3">
-                <label className="flex flex-1 flex-col gap-2 text-xs text-secondary">
-                    Email
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(event) => onEmailChange(event.target.value)}
-                        placeholder="name@company.com"
-                        className="rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none"
-                    />
-                </label>
-                <label className="flex flex-col gap-2 text-xs text-secondary">
-                    Role
+        <section className="py-4 border-t border-default">
+            <div className="flex items-center gap-2 mb-4">
+                <UserPlus size={18} className="text-secondary" />
+                <h3 className="text-base font-medium text-primary">People with access</h3>
+            </div>
+            
+            <div className="ml-7">
+                <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(event) => onEmailChange(event.target.value)}
+                            placeholder="Add people and groups"
+                            className="w-full rounded-md border border-default bg-transparent px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
+                        />
+                    </div>
                     <select
                         value={role}
                         onChange={(event) => onRoleChange(event.target.value)}
-                        className="rounded-lg border border-default bg-secondary px-3 py-2 text-sm text-primary focus:border-focus focus:outline-none"
+                        className="w-32 rounded-md border border-default bg-transparent px-3 py-2 text-sm text-primary focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
                     >
                         {ROLE_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -133,44 +141,51 @@ const PeopleSection = ({
                             </option>
                         ))}
                     </select>
-                </label>
-                <button
-                    type="button"
-                    onClick={onAssign}
-                    disabled={isAssigning}
-                    className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${isAssigning
-                        ? 'bg-secondary text-muted opacity-70 cursor-not-allowed'
-                        : 'bg-primary-500 text-on-primary hover:bg-primary-600'
-                        }`}
-                >
-                    {isAssigning ? 'Assigning...' : 'Assign'}
-                </button>
-            </div>
-            {error && <p className="mt-3 text-xs text-danger">{error}</p>}
-            <div className="mt-4 flex flex-col gap-2">
-                {roles.length === 0 && (
-                    <p className="text-xs text-secondary">No assigned collaborators yet.</p>
-                )}
-                {roles.map((item) => (
-                    <div
-                        key={`${item.user_id}-${item.role}`}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-default bg-secondary px-3 py-2"
+                    <button
+                        type="button"
+                        onClick={onAssign}
+                        disabled={isAssigning || !email}
+                        className={`rounded-md px-4 py-2 text-sm font-medium transition ${isAssigning || !email
+                            ? 'bg-tertiary text-muted cursor-not-allowed'
+                            : 'bg-primary-500 text-white hover:bg-primary-600'
+                            }`}
                     >
-                        <div>
-                            <p className="text-sm text-primary">{item.email}</p>
-                            <p className="text-xs text-secondary">
-                                {item.role === 'editor' ? 'Editor' : 'Responder'}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => onRemove(item.user_id)}
-                            className="text-xs font-semibold text-secondary transition hover:text-primary"
+                        {isAssigning ? 'Adding...' : 'Send'}
+                    </button>
+                </div>
+                {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+
+                <div className="mt-6 flex flex-col gap-3">
+                    {roles.length === 0 && (
+                        <p className="text-sm text-secondary italic">No one has been added yet.</p>
+                    )}
+                    {roles.map((item) => (
+                        <div
+                            key={`${item.user_id}-${item.role}`}
+                            className="flex items-center justify-between group"
                         >
-                            Remove
-                        </button>
-                    </div>
-                ))}
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-700 font-semibold text-sm">
+                                    {item.email.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="text-sm text-primary">{item.email}</div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm text-secondary">
+                                    {item.role === 'editor' ? 'Editor' : 'Responder'}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => onRemove(item.user_id)}
+                                    className="text-secondary hover:text-danger p-1 rounded-full hover:bg-tertiary transition opacity-0 group-hover:opacity-100"
+                                    title="Remove access"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </section>
     );
@@ -196,100 +211,75 @@ const TokenPanel = ({
             : '';
 
     return (
-        <div className="rounded-lg border border-default bg-tertiary p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h4 className="text-sm font-semibold text-primary">{title}</h4>
-                    <p className="mt-1 text-xs text-secondary">
-                        Generate a shareable link token for {title.toLowerCase()} access.
-                    </p>
+                    <div className="text-sm font-medium text-primary">{title} link</div>
+                    <div className="text-xs text-secondary">Generate a shareable link for {title.toLowerCase()}s</div>
                 </div>
                 <button
                     type="button"
                     onClick={() => onCreate(scope)}
                     disabled={isCreating}
-                    className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${isCreating
-                        ? 'bg-secondary text-muted opacity-70 cursor-not-allowed'
-                        : 'bg-primary-500 text-on-primary hover:bg-primary-600'
-                        }`}
+                    className="text-sm font-medium text-primary-600 hover:text-primary-700 transition"
                 >
-                    {isCreating ? 'Generating...' : 'Generate link'}
+                    {isCreating ? 'Generating...' : 'Create link'}
                 </button>
             </div>
+            
             {revealedToken && revealedToken.scope === scope && (
-                <div className="mt-4 rounded-lg border border-default bg-secondary p-3">
-                    <p className="text-xs text-secondary">
+                <div className="rounded-md border border-primary-200 bg-primary-50 p-3 flex flex-col gap-2">
+                    <p className="text-xs text-primary-700">
                         {isResponderScope
-                            ? 'New responder link (shown once). Copy it now and share it.'
-                            : 'New token (shown once). Copy it now and store it securely.'}
+                            ? 'New responder link generated. Copy it now.'
+                            : 'New editor token generated. Store it securely.'}
                     </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <code className="break-all rounded bg-tertiary px-2 py-1 text-xs text-primary">
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1 truncate rounded bg-white px-2 py-1.5 text-xs text-primary border border-primary-100 font-mono">
                             {resolvedTokenValue}
-                        </code>
+                        </div>
                         <button
                             type="button"
                             onClick={() => onCopyToken(revealedToken.token, scope)}
-                            className="rounded-lg border border-default bg-tertiary px-2 py-1 text-xs font-semibold text-secondary transition hover:text-primary"
+                            className="flex items-center gap-1 rounded border border-primary-200 bg-white px-2 py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-50 transition"
                         >
-                            Copy
+                            {copyStatus === 'Copied' ? <Check size={14} /> : <Copy size={14} />}
+                            {copyStatus === 'Copied' ? 'Copied' : 'Copy'}
                         </button>
-                        {copyStatus && (
-                            <span className="text-xs text-secondary">{copyStatus}</span>
-                        )}
                     </div>
                 </div>
             )}
-            <div className="mt-4 flex flex-col gap-2">
-                {tokens.length === 0 && (
-                    <p className="text-xs text-secondary">No tokens yet.</p>
-                )}
-                {tokens.map((token) => (
-                    <div
-                        key={token.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-default bg-secondary px-3 py-2"
-                    >
-                        <div>
-                            <p className="text-xs text-secondary">Scope</p>
-                            <p className="text-sm text-primary">
-                                {token.scope === 'editor' ? 'Editor' : 'Responder'}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-secondary">Created</p>
-                            <p className="text-xs text-primary">
-                                {formatTimestamp(token.created_at, 'Unknown')}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-secondary">Last used</p>
-                            <p className="text-xs text-primary">
-                                {formatTimestamp(token.last_used_at, 'Never')}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-secondary">Status</p>
-                            <p
-                                className={`text-xs font-semibold ${token.is_active ? 'text-success' : 'text-muted'
+            
+            {tokens.length > 0 && (
+                <div className="flex flex-col gap-2 mt-2">
+                    {tokens.map((token) => (
+                        <div
+                            key={token.id}
+                            className="flex items-center justify-between py-2 border-b border-tertiary last:border-0"
+                        >
+                            <div className="flex flex-col">
+                                <span className="text-xs font-medium text-primary">
+                                    {formatTimestamp(token.created_at, 'Unknown')}
+                                </span>
+                                <span className={`text-[10px] ${token.is_active ? 'text-success' : 'text-muted'}`}>
+                                    {token.is_active ? 'Active' : 'Revoked'} • Last used: {formatTimestamp(token.last_used_at, 'Never')}
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => onRevoke(token.id)}
+                                disabled={!token.is_active || revokingTokenId === token.id}
+                                className={`text-xs font-medium transition ${!token.is_active || revokingTokenId === token.id
+                                    ? 'text-muted cursor-not-allowed'
+                                    : 'text-danger hover:text-danger-dark'
                                     }`}
                             >
-                                {token.is_active ? 'Active' : 'Revoked'}
-                            </p>
+                                {revokingTokenId === token.id ? 'Revoking...' : 'Revoke'}
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => onRevoke(token.id)}
-                            disabled={!token.is_active || revokingTokenId === token.id}
-                            className={`text-xs font-semibold transition ${!token.is_active || revokingTokenId === token.id
-                                ? 'text-muted cursor-not-allowed'
-                                : 'text-secondary hover:text-primary'
-                                }`}
-                        >
-                            {revokingTokenId === token.id ? 'Revoking...' : 'Revoke'}
-                        </button>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
@@ -316,25 +306,13 @@ const TokenSection = ({
     );
 
     return (
-        <section className="rounded-lg border border-default bg-tertiary p-4">
-            <h3 className="text-sm font-semibold text-primary">Link tokens</h3>
-            <p className="mt-2 text-xs text-secondary">
-                Create and revoke secure tokens for link-based access.
-            </p>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <TokenPanel
-                    title="Editor"
-                    scope="editor"
-                    tokens={editorTokens}
-                    isCreating={createState.editor}
-                    revokingTokenId={revokingTokenId}
-                    revealedToken={revealedToken}
-                    copyStatus={copyStatus}
-                    onCopyToken={onCopyToken}
-                    onCreate={onCreate}
-                    onRevoke={onRevoke}
-                    resolveTokenValue={resolveTokenValue}
-                />
+        <section className="py-4 border-t border-default">
+            <div className="flex items-center gap-2 mb-4">
+                <LinkIcon size={18} className="text-secondary" />
+                <h3 className="text-base font-medium text-primary">Links</h3>
+            </div>
+            
+            <div className="ml-7 flex flex-col gap-6">
                 <TokenPanel
                     title="Responder"
                     scope="responder"
@@ -348,8 +326,24 @@ const TokenSection = ({
                     onRevoke={onRevoke}
                     resolveTokenValue={resolveTokenValue}
                 />
+                
+                <div className="h-px bg-tertiary w-full"></div>
+                
+                <TokenPanel
+                    title="Editor"
+                    scope="editor"
+                    tokens={editorTokens}
+                    isCreating={createState.editor}
+                    revokingTokenId={revokingTokenId}
+                    revealedToken={revealedToken}
+                    copyStatus={copyStatus}
+                    onCopyToken={onCopyToken}
+                    onCreate={onCreate}
+                    onRevoke={onRevoke}
+                    resolveTokenValue={resolveTokenValue}
+                />
             </div>
-            {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+            {error && <p className="mt-3 ml-7 text-xs text-danger">{error}</p>}
         </section>
     );
 };
@@ -594,39 +588,34 @@ const ShareModal = ({ formId, isOpen, onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-8">
-            <div className="flex w-full max-w-4xl max-h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-xl border border-default bg-secondary shadow-lg">
-                <div className="flex items-start justify-between gap-4 border-b border-default px-6 py-4">
-                    <div>
-                        <h2 className="text-xl font-semibold text-primary">Share access</h2>
-                        <p className="mt-1 text-sm text-secondary">
-                            Manage who can edit or respond to this form.
-                        </p>
-                    </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 backdrop-blur-sm p-4">
+            <div className="flex w-full max-w-2xl max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-2xl bg-secondary shadow-xl">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-default">
+                    <h2 className="text-xl font-normal text-primary">Share form</h2>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="text-sm font-semibold text-secondary transition hover:text-primary"
+                        className="text-secondary hover:bg-tertiary p-2 rounded-full transition-colors"
                     >
-                        Close
+                        <X size={20} />
                     </button>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">
+                <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
                     {status === 'loading' && (
-                        <p className="text-sm text-secondary">
-                            Loading access controls...
-                        </p>
+                        <div className="flex items-center justify-center py-10">
+                            <p className="text-sm text-secondary">Loading...</p>
+                        </div>
                     )}
 
                     {loadError && (
-                        <div className="rounded-lg border border-default bg-tertiary px-4 py-3 text-sm text-secondary">
+                        <div className="rounded-lg bg-danger-50 px-4 py-3 text-sm text-danger-700">
                             {loadError}
                         </div>
                     )}
 
                     {status === 'ready' && (
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col">
                             <AccessModeSection
                                 settings={accessSettings}
                                 isSaving={isSavingAccess}
@@ -658,6 +647,16 @@ const ShareModal = ({ formId, isOpen, onClose }) => {
                             />
                         </div>
                     )}
+                </div>
+                
+                <div className="border-t border-default px-6 py-4 flex justify-end">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-full px-6 py-2 text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition"
+                    >
+                        Done
+                    </button>
                 </div>
             </div>
         </div>

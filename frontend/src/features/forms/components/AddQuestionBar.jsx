@@ -1,60 +1,88 @@
-const AddQuestionBar = ({ onAdd, isDisabled = false }) => {
+import { Type, AlignJustify, CircleDot, CheckSquare, List, SplitSquareVertical } from 'lucide-react';
+
+const AddQuestionBar = ({ onAdd, onAddSection, isDisabled = false }) => {
     return (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex w-fit gap-2 rounded-xl border border-default bg-tertiary p-2 shadow-sm md:flex-col md:shadow-md">
             <button
                 type="button"
                 onClick={() => onAdd('short_text')}
                 disabled={isDisabled}
-                className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition ${isDisabled
-                    ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                    : 'bg-primary-500 text-on-primary hover:bg-primary-600'
+                title="Add short text"
+                aria-label="Add short text"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${isDisabled
+                    ? 'text-muted opacity-70 cursor-not-allowed'
+                    : 'text-secondary hover:bg-secondary hover:text-primary'
                     }`}
             >
-                Add short text
+                <Type size={20} />
             </button>
             <button
                 type="button"
                 onClick={() => onAdd('paragraph')}
                 disabled={isDisabled}
-                className={`inline-flex items-center justify-center rounded-lg border border-default px-4 py-2 text-sm font-semibold transition ${isDisabled
-                    ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                    : 'bg-tertiary text-secondary hover:text-primary'
+                title="Add paragraph"
+                aria-label="Add paragraph"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${isDisabled
+                    ? 'text-muted opacity-70 cursor-not-allowed'
+                    : 'text-secondary hover:bg-secondary hover:text-primary'
                     }`}
             >
-                Add paragraph
+                <AlignJustify size={20} />
             </button>
             <button
                 type="button"
                 onClick={() => onAdd('multiple_choice')}
                 disabled={isDisabled}
-                className={`inline-flex items-center justify-center rounded-lg border border-default px-4 py-2 text-sm font-semibold transition ${isDisabled
-                    ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                    : 'bg-tertiary text-secondary hover:text-primary'
+                title="Add multiple choice"
+                aria-label="Add multiple choice"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${isDisabled
+                    ? 'text-muted opacity-70 cursor-not-allowed'
+                    : 'text-secondary hover:bg-secondary hover:text-primary'
                     }`}
             >
-                Add multiple choice
+                <CircleDot size={20} />
             </button>
             <button
                 type="button"
                 onClick={() => onAdd('checkboxes')}
                 disabled={isDisabled}
-                className={`inline-flex items-center justify-center rounded-lg border border-default px-4 py-2 text-sm font-semibold transition ${isDisabled
-                    ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                    : 'bg-tertiary text-secondary hover:text-primary'
+                title="Add checkboxes"
+                aria-label="Add checkboxes"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${isDisabled
+                    ? 'text-muted opacity-70 cursor-not-allowed'
+                    : 'text-secondary hover:bg-secondary hover:text-primary'
                     }`}
             >
-                Add checkboxes
+                <CheckSquare size={20} />
             </button>
             <button
                 type="button"
                 onClick={() => onAdd('dropdown')}
                 disabled={isDisabled}
-                className={`inline-flex items-center justify-center rounded-lg border border-default px-4 py-2 text-sm font-semibold transition ${isDisabled
-                    ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                    : 'bg-tertiary text-secondary hover:text-primary'
+                title="Add dropdown"
+                aria-label="Add dropdown"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${isDisabled
+                    ? 'text-muted opacity-70 cursor-not-allowed'
+                    : 'text-secondary hover:bg-secondary hover:text-primary'
                     }`}
             >
-                Add dropdown
+                <List size={20} />
+            </button>
+            
+            <div className="mx-2 h-px w-auto bg-default md:mx-auto md:h-auto md:w-5 md:border-t" />
+            
+            <button
+                type="button"
+                onClick={onAddSection}
+                disabled={isDisabled}
+                title="Add section"
+                aria-label="Add section"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${isDisabled
+                    ? 'text-muted opacity-70 cursor-not-allowed'
+                    : 'text-secondary hover:bg-secondary hover:text-primary'
+                    }`}
+            >
+                <SplitSquareVertical size={20} />
             </button>
         </div>
     );

@@ -4,7 +4,7 @@ from django.utils import timezone #type: ignore
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from apps.accounts.models import User
+from apps.accounts.models import User, UserSettings
 from apps.accounts.services import auth_service, email_service, otp_service
 
 
@@ -115,3 +115,16 @@ class LoginSerializer(TokenObtainPairSerializer):
                 {"detail": "Email not verified.", "code": "email_not_verified"}
             )
         return super().validate(attrs)
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["email"] = user.email
+        return token
+
+
+class UserSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSettings
+        fields = ["default_collect_email", "theme_preference", "default_form_color"]
+

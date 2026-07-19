@@ -40,6 +40,7 @@ const normalizeFormDetail = (payload) => {
 
     const draftSchema = normalizeSchema(payload.draft_schema);
     const publishedVersion = normalizePublishedVersion(payload.published_version);
+    const settings = isRecord(payload.settings) ? payload.settings : {};
 
     return {
         id,
@@ -47,6 +48,7 @@ const normalizeFormDetail = (payload) => {
         description,
         draftSchema,
         publishedVersion,
+        settings,
     };
 };
 
@@ -75,7 +77,7 @@ export const fetchForm = async (id) => {
     }
 };
 
-export const saveDraft = async ({ id, title, description, draftSchema }) => {
+export const saveDraft = async ({ id, title, description, draftSchema, settings }) => {
     if (!id) {
         return { form: null, error: 'Missing form id.' };
     }
@@ -85,6 +87,7 @@ export const saveDraft = async ({ id, title, description, draftSchema }) => {
             title,
             description,
             draft_schema: draftSchema,
+            settings,
         });
 
         const normalized = normalizeFormDetail(response?.data);

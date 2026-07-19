@@ -45,7 +45,7 @@ const FormActionsMenu = ({ onRename, onDelete, onCopy }) => {
     };
 
     return (
-        <div ref={menuRef} className="relative">
+        <div ref={menuRef} className={`relative ${isOpen ? 'z-50' : ''}`}>
             <button
                 type="button"
                 aria-label="Open form actions"

@@ -5,6 +5,7 @@ import LandingPage from '../features/landing/LandingPage';
 import DashboardPage from '../features/dashboard/DashboardPage';
 import FormBuilderPage from '../features/forms/FormBuilderPage';
 import PublicFormPage from '../features/forms/PublicFormPage';
+import SettingsPage from '../features/settings/SettingsPage';
 
 const AppRoutes = () => {
     return (
@@ -17,6 +18,7 @@ const AppRoutes = () => {
                 <Route element={<ProtectedRoute />}>
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/forms/:id/builder" element={<FormBuilderPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
                 </Route>
             </Routes>
         </BrowserRouter>

@@ -32,6 +32,7 @@ class FormDetailSerializer(serializers.ModelSerializer):
             "updated_at",
             "draft_schema",
             "published_version",
+            "settings",
         ]
 
     def get_draft_schema(self, obj):
@@ -69,6 +70,7 @@ class FormUpdateSerializer(serializers.Serializer):
     title = serializers.CharField(required=False, allow_blank=True)
     description = serializers.CharField(required=False, allow_blank=True)
     draft_schema = serializers.JSONField(required=False, allow_null=True)
+    settings = serializers.JSONField(required=False, allow_null=True)
 
     def update(self, instance, validated_data):
         title = validated_data["title"] if "title" in validated_data else None
@@ -78,11 +80,15 @@ class FormUpdateSerializer(serializers.Serializer):
         draft_schema = (
             validated_data["draft_schema"] if "draft_schema" in validated_data else None
         )
+        settings = (
+            validated_data["settings"] if "settings" in validated_data else None
+        )
         form_service.update_draft(
             instance,
             title=title,
             description=description,
             schema=draft_schema,
+            settings=settings,
         )
         return instance
 
@@ -102,7 +108,7 @@ class FormPublicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Form
-        fields = ["id", "title", "description", "published_schema"]
+        fields = ["id", "title", "description", "published_schema", "settings"]
 
     def get_published_schema(self, obj):
         if not obj.published_version:

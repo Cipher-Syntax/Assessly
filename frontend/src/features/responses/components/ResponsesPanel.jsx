@@ -224,8 +224,8 @@ const ResponsesPanel = ({ formId }) => {
     };
 
     const renderEmptyState = () => (
-        <div className="rounded-lg border border-default bg-tertiary px-4 py-3 text-sm text-secondary">
-            No responses yet.
+        <div className="flex items-center justify-center py-12 text-sm text-secondary">
+            Waiting for responses
         </div>
     );
 
@@ -288,23 +288,24 @@ const ResponsesPanel = ({ formId }) => {
         }
 
         return (
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-xs text-secondary">
-                        {currentPage} of {totalPages}
-                    </div>
-                    <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-6">
+                <div className="rounded-xl border border-default bg-secondary overflow-hidden shadow-sm p-6 flex flex-col items-center justify-center">
+                    <div className="text-sm text-secondary mb-2">Response {activeIndex + 1} of {totalResponses}</div>
+                    <div className="flex items-center gap-4">
                         <button
                             type="button"
                             onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))}
                             disabled={!canGoPrev}
-                            className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${canGoPrev
-                                ? 'bg-tertiary text-secondary hover:text-primary'
-                                : 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
+                            className={`p-2 rounded-full transition ${canGoPrev
+                                ? 'text-secondary hover:bg-tertiary hover:text-primary'
+                                : 'text-muted cursor-not-allowed'
                                 }`}
                         >
-                            Prev
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                         </button>
+                        <span className="text-xl font-normal text-primary px-4">
+                            Response {activeIndex + 1}
+                        </span>
                         <button
                             type="button"
                             onClick={() =>
@@ -313,17 +314,17 @@ const ResponsesPanel = ({ formId }) => {
                                 )
                             }
                             disabled={!canGoNext}
-                            className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${canGoNext
-                                ? 'bg-tertiary text-secondary hover:text-primary'
-                                : 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
+                            className={`p-2 rounded-full transition ${canGoNext
+                                ? 'text-secondary hover:bg-tertiary hover:text-primary'
+                                : 'text-muted cursor-not-allowed'
                                 }`}
                         >
-                            Next
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
                     </div>
                 </div>
                 {detailStatus === 'loading' && (
-                    <p className="text-sm text-secondary">Loading response details...</p>
+                    <p className="text-sm text-secondary text-center py-8">Loading response details...</p>
                 )}
                 {detailStatus === 'error' && detailError && renderErrorState(detailError)}
                 {detailStatus === 'ready' && (
@@ -334,15 +335,32 @@ const ResponsesPanel = ({ formId }) => {
     };
 
     return (
-        <section className="rounded-xl border border-default bg-secondary p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-default pb-4">
-                <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-6">
+            <section className="rounded-xl border border-default bg-secondary overflow-hidden shadow-sm">
+                <div className="p-6 pb-0 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h2 className="text-3xl font-normal text-primary">{totalResponses} responses</h2>
+                    </div>
+                    <div className="flex items-center">
+                        <button
+                            type="button"
+                            onClick={handleRefresh}
+                            disabled={responsesStatus === 'loading'}
+                            className="p-2 text-secondary hover:text-primary hover:bg-tertiary rounded-full transition mb-2"
+                            title="Refresh"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="px-6 flex gap-6 border-b border-default mt-4">
                     <button
                         type="button"
                         onClick={() => setView('summary')}
-                        className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${view === 'summary'
-                            ? 'bg-primary-500 text-on-primary'
-                            : 'bg-tertiary text-secondary hover:text-primary'
+                        className={`pb-3 text-sm font-medium transition-colors border-b-2 ${view === 'summary'
+                            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                            : 'border-transparent text-secondary hover:text-primary'
                             }`}
                     >
                         Summary
@@ -350,30 +368,20 @@ const ResponsesPanel = ({ formId }) => {
                     <button
                         type="button"
                         onClick={() => setView('individual')}
-                        className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${view === 'individual'
-                            ? 'bg-primary-500 text-on-primary'
-                            : 'bg-tertiary text-secondary hover:text-primary'
+                        className={`pb-3 text-sm font-medium transition-colors border-b-2 ${view === 'individual'
+                            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                            : 'border-transparent text-secondary hover:text-primary'
                             }`}
                     >
                         Individual
                     </button>
                 </div>
-                <button
-                    type="button"
-                    onClick={handleRefresh}
-                    disabled={responsesStatus === 'loading'}
-                    className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${responsesStatus === 'loading'
-                        ? 'bg-tertiary text-muted opacity-60 cursor-not-allowed'
-                        : 'bg-tertiary text-secondary hover:text-primary'
-                        }`}
-                >
-                    Refresh
-                </button>
-            </div>
-            <div className="mt-6">
+            </section>
+            
+            <div className="">
                 {view === 'summary' ? renderSummaryView() : renderIndividualView()}
             </div>
-        </section>
+        </div>
     );
 };
 

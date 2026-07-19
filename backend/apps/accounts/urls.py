@@ -6,6 +6,8 @@ from apps.accounts.views import (
     RegisterView,
     ResendOtpView,
     VerifyOtpView,
+    UserSettingsView,
+    CurrentUserView,
 )
 
 urlpatterns = [
@@ -14,4 +16,6 @@ urlpatterns = [
     path("resend-otp/", ResendOtpView.as_view(), name="accounts-resend-otp"),
     path("logout/", LogoutView.as_view(), name="accounts-logout"),
     path("google/", GoogleLoginView.as_view(), name="accounts-google-login"),
+    path("settings/", UserSettingsView.as_view(), name="accounts-settings"),
+    path("me/", CurrentUserView.as_view(), name="accounts-me"),
 ]

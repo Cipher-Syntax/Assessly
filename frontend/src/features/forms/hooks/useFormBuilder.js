@@ -94,6 +94,7 @@ const useFormBuilder = ({ formId }) => {
     const [loadError, setLoadError] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [settings, setSettings] = useState({});
     const [sections, setSections] = useState([createSection()]);
     const [publishedVersion, setPublishedVersion] = useState(null);
     const [isEditingDraft, setIsEditingDraft] = useState(true);
@@ -143,6 +144,7 @@ const useFormBuilder = ({ formId }) => {
 
             setTitle(form.title || '');
             setDescription(form.description || '');
+            setSettings(form.settings || {});
             setSections(
                 normalizedSections.length > 0 ? normalizedSections : [createSection()]
             );
@@ -197,6 +199,7 @@ const useFormBuilder = ({ formId }) => {
                 title,
                 description,
                 draftSchema,
+                settings,
             });
 
             if (!isMountedRef.current || sequence !== saveSequenceRef.current) {
@@ -214,7 +217,7 @@ const useFormBuilder = ({ formId }) => {
         }, SAVE_DELAY_MS);
 
         return () => clearTimeout(timeoutId);
-    }, [status, isEditingDraft, isPublishing, canSave, formId, title, description, sections]);
+    }, [status, isEditingDraft, isPublishing, canSave, formId, title, description, sections, settings]);
 
     const applyFormState = useCallback((form, shouldResetEditState = true) => {
         const normalizedSections = Array.isArray(form.draftSchema.sections)
@@ -223,6 +226,7 @@ const useFormBuilder = ({ formId }) => {
 
         setTitle(form.title || '');
         setDescription(form.description || '');
+        setSettings(form.settings || {});
         setSections(
             normalizedSections.length > 0 ? normalizedSections : [createSection()]
         );
@@ -392,6 +396,7 @@ const useFormBuilder = ({ formId }) => {
         loadError,
         title,
         description,
+        settings,
         sections,
         publishedVersion,
         isEditingDraft,
@@ -403,6 +408,7 @@ const useFormBuilder = ({ formId }) => {
         actions: {
             setTitle,
             setDescription,
+            setSettings,
             addSection,
             updateSection,
             deleteSection,

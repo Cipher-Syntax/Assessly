@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import DashboardLayout from './components/DashboardLayout';
 import DeleteFormModal from './components/DeleteFormModal';
 import EmptyState from './components/EmptyState';
@@ -29,6 +30,9 @@ const FormCardSkeleton = () => (
 
 const DashboardPage = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const searchQuery = (searchParams.get('q') || '').toLowerCase();
+    
     const isMountedRef = useRef(true);
     const [status, setStatus] = useState('loading');
     const [forms, setForms] = useState([]);
@@ -222,15 +226,37 @@ const DashboardPage = () => {
         navigate(`/forms/${id}/builder`);
     };
 
+    const filteredForms = forms.filter(form => form.title.toLowerCase().includes(searchQuery));
+
     return (
         <DashboardLayout>
-            <div className="flex flex-col gap-6">
-                <header>
-                    <h1 className="text-title font-semibold text-primary">Your forms</h1>
-                    <p className="mt-2 text-sm text-secondary">
-                        Manage drafts, review published forms, and track submissions in one place.
-                    </p>
-                </header>
+            {/* Start a new form section */}
+            <div className="bg-tertiary border-b border-default pb-8 pt-6">
+                <div className="mx-auto max-w-6xl px-4 sm:px-6">
+                    <h2 className="text-base font-medium text-primary mb-4">Start a new form</h2>
+                    <div className="flex gap-4">
+                        <button 
+                            onClick={handleCreate} 
+                            disabled={isCreating} 
+                            className="group flex flex-col gap-2 w-40 text-left outline-none"
+                        >
+                            <div className="h-32 w-full rounded-lg border border-default bg-secondary flex items-center justify-center group-hover:border-primary-500 group-focus-visible:ring-2 group-focus-visible:ring-focus transition-colors">
+                                <Plus className="w-12 h-12 text-primary-500" />
+                            </div>
+                            <span className="text-sm font-medium text-primary truncate pl-1">Blank</span>
+                        </button>
+                    </div>
+                    {createError && (
+                        <p className="mt-2 text-sm text-danger">{createError}</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Recent forms section */}
+            <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-base font-medium text-primary">Recent forms</h2>
+                </div>
 
                 {status === 'loading' && (
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -247,16 +273,20 @@ const DashboardPage = () => {
                 )}
 
                 {status === 'ready' && forms.length === 0 && (
-                    <EmptyState
-                        onCreate={handleCreate}
-                        isCreating={isCreating}
-                        errorMessage={createError}
-                    />
+                    <div className="flex flex-col items-center justify-center py-12 text-secondary">
+                        <p>No forms yet. Click "Blank" above to create one.</p>
+                    </div>
                 )}
 
-                {status === 'ready' && forms.length > 0 && (
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 cursor-pointer">
-                        {forms.map((form) => (
+                {status === 'ready' && forms.length > 0 && filteredForms.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-secondary">
+                        <p>No forms match your search.</p>
+                    </div>
+                )}
+
+                {status === 'ready' && filteredForms.length > 0 && (
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        {filteredForms.map((form) => (
                             <FormCard
                                 key={form.id}
                                 form={form}

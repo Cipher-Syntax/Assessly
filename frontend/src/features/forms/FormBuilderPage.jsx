@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import {
     closestCenter,
     DndContext,
@@ -9,10 +10,12 @@ import {
     useSensors,
 } from '@dnd-kit/core';
 import SectionCard from './components/SectionCard';
+import AddQuestionBar from './components/AddQuestionBar';
 import { QuestionCardPreview } from './components/QuestionCard';
 import useFormBuilder from './hooks/useFormBuilder';
 import ShareModal from '../permissions/components/ShareModal';
 import ResponsesPanel from '../responses/components/ResponsesPanel';
+import SettingsPanel from './components/SettingsPanel';
 import PageSpinner from '../../components/ui/PageSpinner';
 import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../app/useToast';
@@ -24,6 +27,7 @@ const FormBuilderPage = () => {
         loadError,
         title,
         description,
+        settings,
         sections,
         publishedVersion,
         isEditingDraft,
@@ -35,6 +39,7 @@ const FormBuilderPage = () => {
         actions,
     } = useFormBuilder({ formId: id });
 
+    const [activeSectionId, setActiveSectionId] = useState(null);
     const [activeQuestionId, setActiveQuestionId] = useState(null);
     const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -67,6 +72,13 @@ const FormBuilderPage = () => {
 
         return null;
     }, [activeQuestionId, sections]);
+
+    const currentSectionId = useMemo(() => {
+        if (activeSectionId && sections.some((s) => s.id === activeSectionId)) {
+            return activeSectionId;
+        }
+        return sections[sections.length - 1]?.id;
+    }, [activeSectionId, sections]);
 
     const handleDragStart = (event) => {
         if (!isEditingDraft || isPublishing) {
@@ -208,125 +220,119 @@ const FormBuilderPage = () => {
             onDragEnd={handleDragEnd}
         >
             <div className="min-h-screen bg-primary text-primary">
-                <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-                    <div className="flex flex-col gap-6">
-                        <section className="rounded-xl border border-default bg-secondary p-6">
-                            <div className="flex flex-col gap-4">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab('builder')}
-                                        className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${activeTab === 'builder'
-                                            ? 'bg-primary-500 text-on-primary'
-                                            : 'bg-tertiary text-secondary hover:text-primary'
-                                            }`}
-                                    >
-                                        Builder
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab('responses')}
-                                        className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${activeTab === 'responses'
-                                            ? 'bg-primary-500 text-on-primary'
-                                            : 'bg-tertiary text-secondary hover:text-primary'
-                                            }`}
-                                    >
-                                        Responses
-                                    </button>
-                                </div>
-                                <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <label className="text-xs text-secondary">
-                                        Form title
-                                    </label>
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        {showPublished && (
-                                            <span className="rounded-full border border-default bg-tertiary px-3 py-1 text-xs text-secondary">
-                                                Published
-                                            </span>
-                                        )}
-                                        {showPublished && (
-                                            <button
-                                                type="button"
-                                                onClick={actions.editDraft}
-                                                disabled={isEditingDraft || isPublishing}
-                                                className={`rounded-lg border border-default px-3 py-1 text-xs font-semibold transition ${isEditingDraft || isPublishing
-                                                    ? 'text-muted opacity-60 cursor-not-allowed'
-                                                    : 'bg-tertiary text-secondary hover:text-primary'
-                                                    }`}
-                                            >
-                                                Edit draft
-                                            </button>
-                                        )}
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsShareOpen(true)}
-                                            className="rounded-lg border border-default bg-tertiary px-3 py-1 text-xs font-semibold text-secondary transition hover:text-primary"
-                                        >
-                                            Share
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsPublishConfirmOpen(true)}
-                                            disabled={isReadOnly}
-                                            className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${isReadOnly
-                                                ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                                                : 'bg-primary-500 text-on-primary hover:bg-primary-600'
-                                                }`}
-                                        >
-                                            {isPublishing ? (
-                                                <span className="inline-flex items-center gap-2">
-                                                    <Spinner size="sm" />
-                                                    Publishing...
-                                                </span>
-                                            ) : (
-                                                'Publish'
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <input
-                                        type="text"
-                                        value={title}
-                                        onChange={(event) =>
-                                            actions.setTitle(event.target.value)
-                                        }
-                                        placeholder="Untitled form"
-                                        disabled={isReadOnly}
-                                        className="w-full rounded-lg border border-default bg-tertiary px-3 py-2 text-base text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
-                                    />
-                                    {validationErrors.title && (
-                                        <p className="text-xs text-danger">
-                                            {validationErrors.title}
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-xs text-secondary">
-                                        Description
-                                    </label>
-                                    <textarea
-                                        value={description}
-                                        onChange={(event) =>
-                                            actions.setDescription(event.target.value)
-                                        }
-                                        placeholder="Describe what this form collects"
-                                        rows={3}
-                                        disabled={isReadOnly}
-                                        className="w-full resize-none rounded-lg border border-default bg-tertiary px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-focus focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
-                                    />
-                                </div>
-                                <div className="text-xs text-secondary">
-                                    {statusLabel}
-                                </div>
-                                {saveError && (
-                                    <p className="text-xs text-danger">{saveError}</p>
-                                )}
-                            </div>
-                        </section>
+                {/* GLOBAL NAVBAR */}
+                <header className="fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b border-default bg-secondary px-4 shadow-sm">
+                    <div className="flex flex-1 items-center gap-4">
+                        <Link to="/dashboard" className="p-2 text-secondary hover:text-primary transition-colors">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(event) => actions.setTitle(event.target.value)}
+                            placeholder="Untitled form"
+                            disabled={isReadOnly}
+                            className="w-48 bg-transparent text-sm font-medium text-primary placeholder:text-muted focus:outline-none focus:border-b focus:border-primary-500 disabled:cursor-not-allowed"
+                        />
+                    </div>
+                    
+                    <div className="flex flex-1 justify-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('builder')}
+                            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${activeTab === 'builder'
+                                ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+                                : 'text-secondary hover:text-primary hover:bg-tertiary'
+                                }`}
+                        >
+                            Questions
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('responses')}
+                            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${activeTab === 'responses'
+                                ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+                                : 'text-secondary hover:text-primary hover:bg-tertiary'
+                                }`}
+                        >
+                            Responses
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('settings')}
+                            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${activeTab === 'settings'
+                                ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+                                : 'text-secondary hover:text-primary hover:bg-tertiary'
+                                }`}
+                        >
+                            Settings
+                        </button>
+                    </div>
 
-                        {activeTab === 'builder' ? (
-                            <>
+                    <div className="flex flex-1 items-center justify-end gap-3">
+                        <span className="text-xs text-secondary hidden md:inline-block mr-2">
+                            {statusLabel}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => setIsShareOpen(true)}
+                            className="rounded-lg border border-default bg-tertiary px-4 py-2 text-sm font-semibold text-secondary transition hover:text-primary"
+                        >
+                            Share
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setIsPublishConfirmOpen(true)}
+                            disabled={isReadOnly}
+                            className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${isReadOnly
+                                ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
+                                : 'bg-primary-500 text-on-primary hover:bg-primary-600'
+                                }`}
+                        >
+                            {isPublishing ? (
+                                <span className="inline-flex items-center gap-2">
+                                    <Spinner size="sm" />
+                                    Publishing...
+                                </span>
+                            ) : (
+                                'Send'
+                            )}
+                        </button>
+                    </div>
+                </header>
+
+                <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-24 sm:px-6">
+                    {activeTab === 'builder' ? (
+                        <div className="relative">
+                            <div className="flex flex-col min-w-0 gap-6">
+                                {/* FORM HEADER CARD */}
+                                <section className="relative overflow-hidden rounded-xl border border-default bg-secondary shadow-sm">
+                                    <div className="absolute top-0 left-0 right-0 h-2 bg-primary-500"></div>
+                                    <div className="flex flex-col gap-4 p-6 pt-8">
+                                        <input
+                                            type="text"
+                                            value={title}
+                                            onChange={(event) => actions.setTitle(event.target.value)}
+                                            placeholder="Form Title"
+                                            disabled={isReadOnly}
+                                            className="w-full bg-transparent text-3xl font-normal text-primary placeholder:text-muted focus:outline-none focus:border-b focus:border-primary-500 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                                        />
+                                        {validationErrors.title && (
+                                            <p className="text-xs text-danger">
+                                                {validationErrors.title}
+                                            </p>
+                                        )}
+                                        <textarea
+                                            value={description}
+                                            onChange={(event) => actions.setDescription(event.target.value)}
+                                            placeholder="Form description"
+                                            rows={2}
+                                            disabled={isReadOnly}
+                                            className="w-full resize-none bg-transparent text-sm text-secondary placeholder:text-muted focus:outline-none focus:border-b focus:border-primary-500 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                                        />
+                                    </div>
+                                </section>
+
                                 <section className="flex flex-col gap-6">
                                     {sections.map((section, index) => (
                                         <SectionCard
@@ -348,28 +354,37 @@ const FormBuilderPage = () => {
                                             onUpdateQuestion={actions.updateQuestion}
                                             onDeleteQuestion={actions.deleteQuestion}
                                             onMoveQuestion={actions.moveQuestion}
+                                            isActive={currentSectionId === section.id}
+                                            onActivate={() => setActiveSectionId(section.id)}
                                         />
                                     ))}
                                 </section>
 
-                                <button
-                                    type="button"
-                                    onClick={actions.addSection}
-                                    disabled={isReadOnly}
-                                    className={`w-full rounded-lg border border-default px-4 py-3 text-sm font-semibold transition ${isReadOnly
-                                        ? 'bg-tertiary text-muted opacity-70 cursor-not-allowed'
-                                        : 'bg-tertiary text-secondary hover:text-primary'
-                                        }`}
-                                >
-                                    Add section
-                                </button>
-                            </>
-                        ) : (
+                                </div>
+
+                                {currentSectionId && (
+                                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 md:absolute md:bottom-0 md:left-auto md:-right-20 md:top-0 md:-translate-x-0">
+                                        <div className="md:sticky md:top-[50vh] md:-translate-y-1/2">
+                                            <AddQuestionBar 
+                                                onAdd={(type) => actions.addQuestion(currentSectionId, type)} 
+                                                onAddSection={actions.addSection}
+                                                isDisabled={isReadOnly} 
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : activeTab === 'responses' ? (
                             <ResponsesPanel formId={id} />
+                        ) : (
+                            <SettingsPanel 
+                                settings={settings} 
+                                onChange={actions.setSettings}
+                                isReadOnly={isReadOnly}
+                            />
                         )}
                     </div>
                 </div>
-            </div>
             {isPublishConfirmOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4">
                     <div className="w-full max-w-md rounded-xl border border-default bg-secondary p-6 shadow-lg">

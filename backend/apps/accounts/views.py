@@ -3,7 +3,7 @@ from allauth.socialaccount.providers.oauth2.client import OAuth2Client #type: ig
 from dj_rest_auth.registration.views import SocialLoginView #type: ignore
 from django.urls import NoReverseMatch #type: ignore
 from rest_framework import generics, serializers, status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenBlacklistSerializer
@@ -14,9 +14,22 @@ from apps.accounts.serializers import (
 	RegisterSerializer,
 	ResendOtpSerializer,
 	VerifyOtpSerializer,
+	UserSettingsSerializer,
 	build_response,
 )
+from apps.accounts.models import User, UserSettings
 
+class UserSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = User
+		fields = ['id', 'email', 'is_active']
+
+class CurrentUserView(generics.RetrieveAPIView):
+	serializer_class = UserSerializer
+	permission_classes = [IsAuthenticated]
+
+	def get_object(self):
+		return self.request.user
 
 class RegisterView(generics.CreateAPIView):
 	serializer_class = RegisterSerializer
@@ -100,3 +113,13 @@ class GoogleLoginView(SocialLoginView):
 			return response
 		payload = build_response("Login successful.", "login_success", response.data)
 		return Response(payload, status=response.status_code)
+
+
+class UserSettingsView(generics.RetrieveUpdateAPIView):
+	serializer_class = UserSettingsSerializer
+	permission_classes = [IsAuthenticated]
+
+	def get_object(self):
+		settings_obj, created = UserSettings.objects.get_or_create(user=self.request.user)
+		return settings_obj
+

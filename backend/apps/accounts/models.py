@@ -78,3 +78,24 @@ class EmailOTP(models.Model):
 
 	def __str__(self):
 		return f"{self.email} ({'used' if self.is_used else 'active'})"
+
+
+class UserSettings(models.Model):
+	user = models.OneToOneField(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.CASCADE,
+		related_name="settings",
+	)
+	# System-wide config
+	default_collect_email = models.BooleanField(default=False)
+	
+	# Styling defaults
+	theme_preference = models.CharField(
+		max_length=20,
+		default="system",
+		choices=[("light", "Light"), ("dark", "Dark"), ("system", "System")]
+	)
+	default_form_color = models.CharField(max_length=7, default="#673ab7")
+
+	def __str__(self):
+		return f"{self.user.email} Settings"

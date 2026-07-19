@@ -14,23 +14,28 @@ const HowItWorks = () => {
                         experience.
                     </p>
                 </div>
-                <div className="mt-10 grid gap-6 md:grid-cols-3">
+                <div className="mt-16 grid gap-6 md:grid-cols-3 relative">
+                    {/* Optional: connecting line behind steps for desktop */}
+                    <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-primary-500/20 via-primary-500/40 to-primary-500/20 -translate-y-1/2 z-0" />
+                    
                     {steps.map((step, index) => {
                         const delayClass = revealDelays[index % revealDelays.length];
 
                         return (
                             <div
                                 key={step.title}
-                                className={`reveal ${delayClass} rounded-xl border border-default bg-secondary p-6 transition duration-300 hover:-translate-y-1`}
+                                className={`reveal ${delayClass} relative z-10 group overflow-hidden rounded-2xl border border-default bg-secondary p-8 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary-500/10 cursor-default`}
                                 data-reveal
                             >
-                                <div className="flex items-center gap-3">
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary-500">
+                                <div className="absolute inset-0 bg-gradient-to-b from-primary-500/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                
+                                <div className="relative flex flex-col items-center text-center">
+                                    <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-soft text-2xl font-bold text-primary-500 shadow-inner group-hover:scale-110 transition-transform duration-300">
                                         {index + 1}
                                     </span>
-                                    <h3 className="text-base font-semibold text-primary">{step.title}</h3>
+                                    <h3 className="mt-6 text-xl font-bold text-primary group-hover:text-primary-500 transition-colors">{step.title}</h3>
+                                    <p className="mt-3 text-sm text-secondary leading-relaxed">{step.description}</p>
                                 </div>
-                                <p className="mt-3 text-sm text-secondary">{step.description}</p>
                             </div>
                         );
                     })}

@@ -50,7 +50,7 @@ def create_form(owner, title=None, description=None):
     return form
 
 
-def update_draft(form, title=None, description=None, schema=None):
+def update_draft(form, title=None, description=None, schema=None, settings=None):
     draft = _get_or_create_draft(form)
     if schema is None:
         schema = draft.schema
@@ -61,6 +61,8 @@ def update_draft(form, title=None, description=None, schema=None):
             form.title = _normalize_title(title)
         if description is not None:
             form.description = description
+        if settings is not None:
+            form.settings = settings
         form.save()
 
         draft.schema = schema

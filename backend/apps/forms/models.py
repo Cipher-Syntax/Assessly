@@ -13,6 +13,7 @@ class Form(models.Model):
 	)
 	title = models.CharField(max_length=255, default="Untitled form")
 	description = models.TextField(blank=True)
+	settings = models.JSONField(default=dict, blank=True)
 	draft_version = models.ForeignKey(
 		"FormVersion",
 		on_delete=models.SET_NULL,

@@ -1,9 +1,9 @@
 import TopNav from './components/TopNav';
 import Hero from './components/Hero';
+import ShowcaseCarousel from './components/ShowcaseCarousel';
 import Features from './components/Features';
 import HowItWorks from './components/HowItWorks';
 import AntiCheat from './components/AntiCheat';
-import Testimonials from './components/Testimonials';
 import Faq from './components/Faq';
 import FinalCta from './components/FinalCta';
 import Footer from './components/Footer';
@@ -22,10 +22,10 @@ const LandingPage = () => {
             <TopNav />
             <main className="relative z-10">
                 <Hero />
+                <ShowcaseCarousel />
                 <Features />
                 <HowItWorks />
                 <AntiCheat />
-                <Testimonials />
                 <Faq />
                 <FinalCta />
             </main>

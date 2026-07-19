@@ -241,6 +241,20 @@ const PublicFormPage = () => {
     const sections = form?.publishedSchema?.sections || [];
     const questions = useMemo(() => flattenQuestions(sections), [sections]);
 
+    const isAntiCheatEnabled = form?.settings?.is_anti_cheat_enabled === true;
+    
+    // Calculate time limit in seconds
+    const timeLimit = useMemo(() => {
+        if (!form?.settings?.is_timer_enabled) return null;
+        const val = form?.settings?.time_limit_value || 0;
+        const unit = form?.settings?.time_limit_unit || 'seconds';
+        if (unit === 'hours') return val * 3600;
+        if (unit === 'minutes') return val * 60;
+        return val;
+    }, [form?.settings]);
+    
+    const [timeLeft, setTimeLeft] = useState(null);
+
     const removeToast = useCallback((toastId) => {
         setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
         const timeoutId = toastTimersRef.current.get(toastId);
@@ -443,7 +457,7 @@ const PublicFormPage = () => {
         }
     }, [handleAutoSubmit, pushToast]);
 
-    const monitoringActive = Boolean(sessionId) && !isSubmitted;
+    const monitoringActive = Boolean(sessionId) && !isSubmitted && isAntiCheatEnabled;
 
     useEffect(() => {
         sessionIdRef.current = sessionId;
@@ -635,6 +649,37 @@ const PublicFormPage = () => {
             window.removeEventListener('focus', handleFocus);
         };
     }, [enqueueEvent, monitoringActive, registerViolation]);
+
+    // Timer logic
+    useEffect(() => {
+        if (!timeLimit || !sessionId || isSubmitted) {
+            return;
+        }
+
+        // Initialize timer if not already set, using session start or current time
+        if (timeLeft === null) {
+            setTimeLeft(timeLimit);
+        }
+
+        const timerId = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev === null) return prev;
+                const next = prev - 1;
+                if (next <= 0) {
+                    clearInterval(timerId);
+                    pushToast('Time is up! Auto-submitting...', 'high');
+                    handleAutoSubmit();
+                    return 0;
+                }
+                if (next === 60) {
+                    pushToast('1 minute remaining.', 'mid');
+                }
+                return next;
+            });
+        }, 1000);
+
+        return () => clearInterval(timerId);
+    }, [timeLimit, sessionId, isSubmitted, handleAutoSubmit, pushToast, timeLeft]);
 
     useEffect(() => {
         if (!isAuthenticated || !form?.id) {
@@ -843,29 +888,48 @@ const PublicFormPage = () => {
         );
     }
 
+    const formatTime = (seconds) => {
+        if (seconds === null) return '';
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        const h = Math.floor(seconds / 3600);
+        if (h > 0) {
+            return `${h}:${m}:${s}`;
+        }
+        return `${m}:${s}`;
+    };
+
     return (
-        <div className="min-h-screen bg-primary text-primary px-4 py-10 sm:px-6">
-            {toasts.length > 0 && (
-                <div className="pointer-events-none fixed right-6 top-6 z-50 flex w-72 flex-col gap-2">
-                    {toasts.map((toast) => (
-                        <div
-                            key={toast.id}
-                            className="pointer-events-auto flex items-start gap-3 rounded-lg border border-default bg-secondary px-4 py-3 text-sm text-primary shadow-lg"
-                        >
-                            <span
-                                className={`mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full ${getToastToneClass(
-                                    toast.tone
-                                )}`}
-                            >
-                                <WarningIcon className="h-4 w-4 text-primary" />
-                            </span>
-                            <span className="flex-1">{toast.message}</span>
-                        </div>
-                    ))}
+        <div className="min-h-screen bg-primary text-primary pb-10">
+            {timeLimit && timeLeft !== null && !isSubmitted && (
+                <div className="fixed top-0 left-0 right-0 z-50 flex h-12 items-center justify-center bg-[var(--primary-500)] text-on-primary font-medium shadow-md transition-colors">
+                    <span className="text-sm">Time Remaining: {formatTime(timeLeft)}</span>
                 </div>
             )}
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                <header className="rounded-xl border border-default bg-secondary p-6">
+            
+            <header className="flex h-16 items-center border-b border-default bg-secondary px-4 shadow-sm">
+                {toasts.length > 0 && (
+                    <div className="pointer-events-none fixed top-6 right-6 z-[9999] flex w-full max-w-sm flex-col items-end gap-3 px-4">
+                        {toasts.map((toast) => (
+                            <div
+                                key={toast.id}
+                                className="pointer-events-auto flex w-full items-start gap-3 rounded-xl border border-default bg-primary px-4 py-3 text-sm text-primary shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-right-8"
+                            >
+                                <span
+                                    className={`mt-0.5 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${getToastToneClass(
+                                        toast.tone
+                                    )}`}
+                                >
+                                    <WarningIcon className="h-4 w-4 text-primary" />
+                                </span>
+                                <span className="flex-1 font-medium leading-relaxed mt-1">{toast.message}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </header>
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 pt-10 sm:px-6">
+                <div className="rounded-xl border border-default bg-secondary p-6">
                     <h1 className="text-title font-semibold text-primary">
                         {form?.title || 'Untitled form'}
                     </h1>
@@ -874,7 +938,7 @@ const PublicFormPage = () => {
                             {form.description}
                         </p>
                     )}
-                </header>
+                </div>
 
                 {isSubmitted ? (
                     <div className="rounded-xl border border-default bg-secondary px-6 py-6 text-center">

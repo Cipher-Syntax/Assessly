@@ -55,26 +55,30 @@ const ResponseDetailCard = ({ response, questions }) => {
     const answerItems = buildAnswerItems(questions, response.answers);
 
     return (
-        <div className="rounded-xl border border-default bg-secondary p-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <h3 className="text-base font-semibold text-primary">Submission</h3>
-                <span className="text-xs text-secondary">
-                    {submittedAt ? `Submitted at ${submittedAt}` : 'Submitted timestamp unavailable'}
-                </span>
+        <div className="flex flex-col gap-4">
+            <div className="relative rounded-xl border border-default bg-secondary shadow-sm">
+                <div className="absolute top-0 left-0 right-0 h-2 bg-primary-500 rounded-t-xl"></div>
+                <div className="p-6 pt-8">
+                    <h3 className="text-2xl font-normal text-primary mb-2">Individual Response</h3>
+                    <span className="text-sm text-secondary">
+                        {submittedAt ? `Submitted on ${new Date(submittedAt).toLocaleString()}` : 'Submitted timestamp unavailable'}
+                    </span>
+                </div>
             </div>
-            <div className="mt-4 flex flex-col gap-3">
+            
+            <div className="flex flex-col gap-6">
                 {answerItems.length === 0 ? (
-                    <div className="rounded-lg border border-default bg-tertiary px-4 py-3 text-sm text-secondary">
+                    <div className="rounded-xl border border-default bg-secondary p-6 text-sm text-secondary text-center shadow-sm">
                         No answers available for this submission.
                     </div>
                 ) : (
                     answerItems.map((item) => (
                         <div
                             key={item.id}
-                            className="rounded-lg border border-default bg-tertiary px-4 py-3"
+                            className="rounded-xl border border-default bg-secondary p-6 shadow-sm"
                         >
-                            <div className="text-sm text-primary">{item.label}</div>
-                            <div className="mt-2 text-sm text-secondary">{item.value}</div>
+                            <div className="text-base font-normal text-primary mb-4">{item.label}</div>
+                            <div className="text-sm text-primary">{item.value}</div>
                         </div>
                     ))
                 )}

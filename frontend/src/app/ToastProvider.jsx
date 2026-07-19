@@ -1,13 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ToastContext } from './useToast';
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 const TOAST_TTL_MS = 4500;
 
 const buildToastStyle = (type) => {
-    if (type === 'error') {
-        return 'border-danger bg-tertiary text-danger';
+    switch (type) {
+        case 'error':
+            return {
+                bg: 'bg-primary',
+                border: 'border-danger text-danger',
+                icon: <AlertCircle className="w-5 h-5 text-danger" />,
+            };
+        case 'success':
+            return {
+                bg: 'bg-primary',
+                border: 'border-success text-success',
+                icon: <CheckCircle2 className="w-5 h-5 text-success" />,
+            };
+        default:
+            return {
+                bg: 'bg-primary',
+                border: 'border-primary-500 text-primary-500',
+                icon: <Info className="w-5 h-5 text-primary-500" />,
+            };
     }
-
-    return 'border-primary-500 bg-primary-soft text-primary';
 };
 
 export const ToastProvider = ({ children }) => {
@@ -71,19 +87,30 @@ export const ToastProvider = ({ children }) => {
     return (
         <ToastContext.Provider value={value}>
             {children}
-            <div className="pointer-events-none fixed right-4 top-4 z-50 flex w-full max-w-xs flex-col gap-3">
-                {toasts.map((toast) => (
-                    <div
-                        key={toast.id}
-                        role="status"
-                        aria-live="polite"
-                        className={`rounded-lg border px-4 py-3 text-sm shadow-lg ${buildToastStyle(
-                            toast.type
-                        )}`}
-                    >
-                        {toast.message}
-                    </div>
-                ))}
+            <div className="pointer-events-none fixed top-6 right-6 z-[9999] flex w-full max-w-sm flex-col items-end gap-3 px-4">
+                {toasts.map((toast) => {
+                    const style = buildToastStyle(toast.type);
+                    return (
+                        <div
+                            key={toast.id}
+                            role="status"
+                            aria-live="polite"
+                            className={`pointer-events-auto flex w-full items-start gap-3 rounded-xl border px-4 py-3 shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-right-8 ${style.bg} ${style.border}`}
+                        >
+                            <div className="flex-shrink-0 mt-0.5">{style.icon}</div>
+                            <div className="flex-1 text-sm font-medium text-primary leading-relaxed">
+                                {toast.message}
+                            </div>
+                            <button
+                                onClick={() => removeToast(toast.id)}
+                                className="flex-shrink-0 ml-4 text-muted hover:text-primary transition-colors cursor-pointer"
+                                aria-label="Close"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    );
+                })}
             </div>
         </ToastContext.Provider>
     );

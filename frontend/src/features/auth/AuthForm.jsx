@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
-import { Eye, EyeOff, ScanText } from 'lucide-react';
+import { Eye, EyeOff, ScanText, FileText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ACCESS_TOKEN, REFRESH_TOKEN } from '../../constants/config';
 import { googleLogin, login, register, resendOtp, verifyOtp } from './services/authService';
 import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../app/useToast';
+import { useTheme } from '../../app/ThemeProvider';
 
 const emailPattern = /\S+@\S+\.\S+/;
 const PENDING_OTP_EMAIL_KEY = 'assessly_pending_otp_email';
@@ -48,27 +49,20 @@ const getErrorMessage = (error, fallback) => {
 
 const AuthLeftPanel = () => {
     return (
-        <div className="relative flex h-full flex-col items-center justify-center bg-tertiary bg-grid px-8 py-10 text-center lg:px-10 lg:py-12">
-            <div className="relative z-10">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="flex items-center justify-center rounded-2xl">
-                        <ScanText className="text-primary-500" size={360} />
+        <div className="relative hidden lg:flex h-full w-full flex-col items-center justify-center bg-tertiary bg-grid border-r border-default px-12 py-16 text-center">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-tertiary/80 pointer-events-none" />
+            <div className="relative z-10 flex flex-col items-center">
+                <div className="flex flex-col items-center gap-6">
+                    <div className="flex h-32 w-32 items-center justify-center rounded-3xl bg-primary-500 text-on-primary shadow-xl shadow-primary-500/20 ring-4 ring-primary-500/10 transition-transform hover:scale-105 duration-300">
+                        <FileText className="w-16 h-16" />
                     </div>
-                    <div>
-                        <p className="text-title font-semibold tracking-widest antialiased leading-relaxed uppercase mt-5">Assessly</p>
+                    <div className="mt-6">
+                        <h1 className="text-5xl font-bold tracking-tight text-primary">Assessly Forms</h1>
+                        <p className="mt-6 text-lg text-secondary max-w-md leading-relaxed">
+                            Create, share, and analyze beautiful forms and surveys with ease.
+                        </p>
                     </div>
                 </div>
-
-                {/* <div className="mt-8 flex flex-wrap gap-2">
-                    {['Create', 'Publish', 'Analyze'].map((item) => (
-                        <span
-                            key={item}
-                            className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-500"
-                        >
-                            {item}
-                        </span>
-                    ))}
-                </div> */}
             </div>
         </div>
     );
@@ -76,12 +70,22 @@ const AuthLeftPanel = () => {
 
 const AuthRightPanel = ({ title, subtitle, children, footer }) => {
     return (
-        <div className="flex h-full flex-col px-8 py-10 lg:px-10 lg:py-12">
-            <div className="mb-6">
-                <h1 className="text-title font-semibold tracking-tight">{title}</h1>
-                <p className="mt-2 text-sm text-secondary">{subtitle}</p>
+        <div className="flex h-full w-full flex-col justify-center px-6 py-10 sm:px-16 lg:px-24 bg-primary relative">
+            <div className="mb-10 lg:hidden flex justify-center w-full">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-500 text-on-primary shadow-md">
+                        <FileText className="w-7 h-7" />
+                    </div>
+                    <span className="text-3xl font-bold tracking-tight text-primary">Assessly</span>
+                </div>
             </div>
-            {children}
+            <div className="mb-8 w-full max-w-md mx-auto">
+                <h2 className="text-4xl font-bold tracking-tight text-primary">{title}</h2>
+                <p className="mt-3 text-lg text-secondary">{subtitle}</p>
+            </div>
+            <div className="w-full max-w-md mx-auto">
+                {children}
+            </div>
             {footer}
         </div>
     );
@@ -109,6 +113,7 @@ const AuthForm = ({ mode = 'login' }) => {
     const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
     const otpInputsRef = useRef([]);
     const toast = useToast();
+    const { reloadTheme } = useTheme();
 
     const isRegisterMode = mode === 'register';
     const isOtpStep = isRegisterMode && step === 'otp';
@@ -215,6 +220,7 @@ const AuthForm = ({ mode = 'login' }) => {
                 localStorage.setItem(ACCESS_TOKEN, data.access);
                 localStorage.setItem(REFRESH_TOKEN, data.refresh);
                 localStorage.removeItem(PENDING_OTP_EMAIL_KEY);
+                await reloadTheme();
                 navigate('/dashboard');
             } catch (error) {
                 const rawCode = error?.response?.data?.code;
@@ -344,6 +350,7 @@ const AuthForm = ({ mode = 'login' }) => {
             localStorage.setItem(ACCESS_TOKEN, data.access);
             localStorage.setItem(REFRESH_TOKEN, data.refresh);
             localStorage.removeItem(PENDING_OTP_EMAIL_KEY);
+            await reloadTheme();
             navigate('/dashboard');
         } catch (error) {
             const rawCode = error?.response?.data?.code;
@@ -898,8 +905,8 @@ const AuthForm = ({ mode = 'login' }) => {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-surface flex items-center justify-center px-4 py-10">
-            <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-2xl border border-default bg-secondary fade-rise lg:grid-cols-2">
+        <div className="flex min-h-screen w-full bg-primary fade-rise">
+            <div className="grid w-full grid-cols-1 lg:grid-cols-2">
                 <AuthLeftPanel />
                 <AuthRightPanel title={headingText} subtitle={subtitleText}>
                     {isOtpStep ? renderOtpForm() : isRegisterMode ? renderRegisterForm() : renderLoginForm()}
