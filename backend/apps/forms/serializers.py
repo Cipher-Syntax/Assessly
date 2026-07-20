@@ -11,7 +11,7 @@ class FormListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Form
-        fields = ["id", "title", "is_published", "updated_at", "published_version_id"]
+        fields = ["id", "title", "is_published", "updated_at", "published_version_id", "is_template"]
 
     def get_is_published(self, obj):
         return obj.has_published
@@ -33,6 +33,7 @@ class FormDetailSerializer(serializers.ModelSerializer):
             "draft_schema",
             "published_version",
             "settings",
+            "is_template",
         ]
 
     def get_draft_schema(self, obj):
@@ -71,6 +72,7 @@ class FormUpdateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)
     draft_schema = serializers.JSONField(required=False, allow_null=True)
     settings = serializers.JSONField(required=False, allow_null=True)
+    is_template = serializers.BooleanField(required=False, allow_null=True)
 
     def update(self, instance, validated_data):
         title = validated_data["title"] if "title" in validated_data else None
@@ -83,12 +85,16 @@ class FormUpdateSerializer(serializers.Serializer):
         settings = (
             validated_data["settings"] if "settings" in validated_data else None
         )
+        is_template = (
+            validated_data["is_template"] if "is_template" in validated_data else None
+        )
         form_service.update_draft(
             instance,
             title=title,
             description=description,
             schema=draft_schema,
             settings=settings,
+            is_template=is_template,
         )
         return instance
 

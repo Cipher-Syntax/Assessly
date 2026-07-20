@@ -47,6 +47,10 @@
 }
 
 @layer base {
+	html {
+		scrollbar-gutter: stable;
+	}
+
 	body {
 		background: var(--gradient-surface);
 		color: var(--text-primary);

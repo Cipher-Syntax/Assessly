@@ -12,6 +12,9 @@ import {
     fetchForms,
     fetchResponseCount,
     renameForm,
+    fetchTemplates,
+    cloneForm,
+    makeFormTemplate,
 } from './services/formService';
 
 const buildLoadingCountMap = (forms) =>
@@ -51,6 +54,10 @@ const DashboardPage = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState('');
 
+    const [templates, setTemplates] = useState([]);
+    const [showAllTemplates, setShowAllTemplates] = useState(false);
+    const [showAllForms, setShowAllForms] = useState(false);
+    
     useEffect(() => {
         let isMounted = true;
         isMountedRef.current = true;
@@ -60,16 +67,17 @@ const DashboardPage = () => {
             setErrorMessage('');
             setResponseCounts({});
 
-            const { forms: ownedForms, count, next, previous, error } = await fetchForms({
-                search: searchQuery,
-                page: pageQuery
-            });
+            const [{ forms: ownedForms, count, next, previous, error }, { templates: loadedTemplates }] = await Promise.all([
+                fetchForms({ search: searchQuery, page: pageQuery }),
+                fetchTemplates()
+            ]);
 
             if (!isMounted) {
                 return;
             }
 
             setForms(ownedForms);
+            setTemplates(loadedTemplates || []);
             setTotalCount(count);
             setHasNext(Boolean(next));
             setHasPrevious(Boolean(previous));
@@ -209,6 +217,32 @@ const DashboardPage = () => {
         setIsDeleting(false);
     };
 
+    const handleToggleTemplate = async (form, isTemplate) => {
+        const { form: updatedForm, error } = await makeFormTemplate(form.id, isTemplate);
+        
+        if (!isMountedRef.current) return;
+        
+        if (error || !updatedForm) {
+            // Might want to show a toast or alert, but for now we'll just log
+            console.error(error || 'Failed to update template status');
+            return;
+        }
+        
+        setForms((currentForms) => 
+            currentForms.map((f) => f.id === updatedForm.id ? { ...f, ...updatedForm } : f)
+        );
+        
+        // Also update the templates gallery
+        if (isTemplate) {
+            setTemplates((current) => {
+                if (current.find(t => t.id === updatedForm.id)) return current;
+                return [updatedForm, ...current];
+            });
+        } else {
+            setTemplates((current) => current.filter(t => t.id !== updatedForm.id));
+        }
+    };
+
     const handleCreate = async () => {
         if (isCreating) {
             return;
@@ -244,23 +278,93 @@ const DashboardPage = () => {
         });
     };
 
+    const handleClone = async (templateId) => {
+        if (isCreating) return;
+        setIsCreating(true);
+        setCreateError('');
+
+        const { form, error } = await cloneForm(templateId);
+
+        if (!isMountedRef.current) return;
+
+        if (error || !form) {
+            setCreateError(error || 'Unable to clone template right now.');
+            setIsCreating(false);
+            return;
+        }
+
+        navigate(`/forms/${form.id}/builder`, { state: { formTitle: form.title } });
+    };
+
+    const displayedTemplates = showAllTemplates ? templates : templates.slice(0, 4);
+    const displayedForms = showAllForms ? forms : forms.slice(0, 5);
+
     return (
         <DashboardLayout>
             {/* Start a new form section */}
             <div className="bg-tertiary border-b border-default pb-8 pt-6">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
-                    <h2 className="text-base font-medium text-primary mb-4">Start a new form</h2>
-                    <div className="flex gap-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-base font-medium text-primary">Start a new form</h2>
+                        <button 
+                            onClick={() => setShowAllTemplates(!showAllTemplates)}
+                            className="text-sm font-medium text-primary-500 hover:bg-secondary px-3 py-1.5 rounded-md transition-colors flex items-center gap-1"
+                        >
+                            Template gallery
+                            <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                                className={`transform transition-transform ${showAllTemplates ? 'rotate-180' : ''}`}
+                            >
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         <button 
                             onClick={handleCreate} 
                             disabled={isCreating} 
-                            className="group flex flex-col gap-2 w-40 text-left outline-none"
+                            className="group cursor-pointer rounded-lg border border-default bg-secondary outline-none transition hover:border-focus focus-visible:ring-2 focus-visible:ring-focus text-left h-full flex flex-col"
                         >
-                            <div className="h-32 w-full rounded-lg border border-default bg-secondary flex items-center justify-center group-hover:border-primary-500 group-focus-visible:ring-2 group-focus-visible:ring-focus transition-colors">
-                                <Plus className="w-12 h-12 text-primary-500" />
+                            <div className="h-36 w-full rounded-t-lg bg-tertiary border-b border-default flex items-center justify-center text-muted group-hover:bg-default transition-colors">
+                                <Plus className="w-16 h-16 text-primary-500 opacity-50" />
                             </div>
-                            <span className="text-sm font-medium text-primary truncate pl-1">Blank</span>
+                            <div className="p-4 flex items-start justify-between gap-3 flex-1">
+                                <div className="min-w-0 flex-1">
+                                    <h3 className="truncate text-sm font-semibold text-primary">
+                                        Blank Form
+                                    </h3>
+                                </div>
+                            </div>
                         </button>
+                        
+                        {displayedTemplates.map(template => (
+                            <button 
+                                key={template.id}
+                                onClick={() => handleClone(template.id)} 
+                                disabled={isCreating} 
+                                className="group cursor-pointer rounded-lg border border-default bg-secondary outline-none transition hover:border-focus focus-visible:ring-2 focus-visible:ring-focus text-left h-full flex flex-col"
+                            >
+                                <div className="h-36 w-full rounded-t-lg bg-tertiary border-b border-default flex items-center justify-center text-muted group-hover:bg-default transition-colors relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 right-0 h-2 bg-primary-500 opacity-80"></div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500 opacity-50"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                </div>
+                                <div className="p-4 flex items-start justify-between gap-3 flex-1">
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="truncate text-sm font-semibold text-primary">
+                                            {template.title}
+                                        </h3>
+                                    </div>
+                                </div>
+                            </button>
+                        ))}
                     </div>
                     {createError && (
                         <p className="mt-2 text-sm text-danger">{createError}</p>
@@ -271,7 +375,15 @@ const DashboardPage = () => {
             {/* Recent forms section */}
             <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-base font-medium text-primary">Recent forms</h2>
+                    <h2 className="text-base font-medium text-primary">
+                        {showAllForms ? 'All forms' : 'Recent forms'}
+                    </h2>
+                    <button 
+                        onClick={() => setShowAllForms(!showAllForms)}
+                        className="text-sm font-medium text-primary-500 hover:bg-tertiary px-3 py-1.5 rounded-md transition-colors flex items-center gap-1"
+                    >
+                        {showAllForms ? 'Hide all forms' : 'View all forms'}
+                    </button>
                 </div>
 
                 {status === 'loading' && (
@@ -302,20 +414,21 @@ const DashboardPage = () => {
 
                 {status === 'ready' && forms.length > 0 && (
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        {forms.map((form) => (
-                            <FormCard
-                                key={form.id}
-                                form={form}
-                                responseCount={responseCounts[form.id]}
-                                onRename={handleOpenRename}
-                                onDelete={handleOpenDelete}
-                                onClick={() => handleRedirectForm(form.id)}
-                            />
+                        {displayedForms.map((form) => (
+                                <FormCard
+                                    key={form.id}
+                                    form={form}
+                                    responseCount={responseCounts[form.id]}
+                                    onRename={handleOpenRename}
+                                    onDelete={handleOpenDelete}
+                                    onToggleTemplate={(isTemplate) => handleToggleTemplate(form, isTemplate)}
+                                    onClick={() => handleRedirectForm(form.id)}
+                                />
                         ))}
                     </div>
                 )}
                 
-                {status === 'ready' && (hasPrevious || hasNext) && (
+                {status === 'ready' && showAllForms && (hasPrevious || hasNext) && (
                     <div className="mt-8 flex items-center justify-between border-t border-default pt-4">
                         <p className="text-sm text-secondary">
                             Showing {(pageQuery - 1) * 12 + 1} to {Math.min(pageQuery * 12, totalCount)} of {totalCount} forms

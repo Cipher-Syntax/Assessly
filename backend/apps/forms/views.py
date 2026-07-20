@@ -43,10 +43,18 @@ class FormViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user or not user.is_authenticated:
             return Form.objects.none()
+            
+        base_qs = self.queryset
+        if getattr(self, "action", None) == "templates":
+            return base_qs.filter(is_template=True)
+            
         editor_form_ids = get_editor_form_ids(user)
-        if editor_form_ids:
-            return self.queryset.filter(Q(owner=user) | Q(id__in=editor_form_ids)).distinct()
-        return self.queryset.filter(owner=user)
+        user_qs = base_qs.filter(Q(owner=user) | Q(id__in=editor_form_ids)).distinct()
+        
+        if getattr(self, "action", None) == "clone":
+            return user_qs | base_qs.filter(is_template=True)
+            
+        return user_qs
 
     def get_object(self):
         queryset = self.queryset
@@ -59,10 +67,12 @@ class FormViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in {"destroy", "publish"}:
             return [IsAuthenticated(), FormOwnerPermission()]
+        if self.action in {"templates", "clone"}:
+            return [IsAuthenticated()]
         return [IsAuthenticated(), FormAccessPermission()]
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.action in {"list", "templates"}:
             return FormListSerializer
         if self.action == "create":
             return FormCreateSerializer
@@ -71,6 +81,25 @@ class FormViewSet(viewsets.ModelViewSet):
         if self.action == "publish":
             return PublishSerializer
         return FormDetailSerializer
+
+    @action(detail=False, methods=["get"])
+    def templates(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def clone(self, request, *args, **kwargs):
+        form = self.get_object()
+        cloned_form = form_service.clone_form(form, request.user)
+        serializer = FormDetailSerializer(cloned_form)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
     @action(detail=True, methods=["post"])
     def publish(self, request, *args, **kwargs):

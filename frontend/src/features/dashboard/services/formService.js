@@ -27,12 +27,15 @@ const normalizeForm = (form) => {
                 ? publishedVersion.id
                 : null;
 
+    const is_template = Boolean(form.is_template);
+
     return {
         id,
         title,
         updated_at,
         is_published,
         published_version_id,
+        is_template,
     };
 };
 
@@ -127,6 +130,33 @@ export const renameForm = async (formId, title) => {
     }
 };
 
+export const makeFormTemplate = async (formId, isTemplate) => {
+    if (!formId) {
+        return { form: null, error: 'Missing form id.' };
+    }
+
+    try {
+        const response = await api.patch(`/api/forms/${formId}/`, {
+            is_template: isTemplate,
+        });
+        const normalized = normalizeForm(response?.data);
+
+        if (!normalized) {
+            return {
+                form: null,
+                error: 'Unexpected response while updating the form.',
+            };
+        }
+
+        return { form: normalized, error: null };
+    } catch {
+        return {
+            form: null,
+            error: 'Unable to update form template status right now.',
+        };
+    }
+};
+
 export const deleteForm = async (formId) => {
     if (!formId) {
         return { success: false, error: 'Missing form id.' };
@@ -164,6 +194,47 @@ export const fetchResponseCount = async (formId) => {
         return {
             count: null,
             error: 'Unable to load response count.',
+        };
+    }
+};
+
+export const fetchTemplates = async () => {
+    try {
+        const response = await api.get('/api/forms/templates/');
+        const payload = response?.data;
+        
+        // Check for DRF paginated response
+        const isPaginated = payload && Array.isArray(payload.results);
+        const rawForms = isPaginated ? payload.results : (Array.isArray(payload) ? payload : []);
+        
+        const templates = rawForms.map(normalizeForm).filter(Boolean);
+        return { templates, error: null };
+    } catch {
+        return { templates: [], error: 'Unable to load templates.' };
+    }
+};
+
+export const cloneForm = async (templateId) => {
+    try {
+        const response = await api.post(`/api/forms/${templateId}/clone/`, {});
+        const payload = response?.data;
+        const normalized = normalizeForm(payload);
+
+        if (!normalized) {
+            return {
+                form: null,
+                error: 'Unexpected response while cloning the form.',
+            };
+        }
+
+        return {
+            form: { id: normalized.id, title: normalized.title },
+            error: null,
+        };
+    } catch {
+        return {
+            form: null,
+            error: 'Unable to clone the form right now.',
         };
     }
 };

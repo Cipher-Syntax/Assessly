@@ -28,7 +28,7 @@ const getResponseCountClassName = (responseCount) => {
     return 'font-semibold text-secondary';
 };
 
-const FormCard = ({ form, responseCount, onRename, onDelete, onClick }) => {
+const FormCard = ({ form, responseCount, onRename, onDelete, onToggleTemplate, onClick }) => {
     const [copyStatus, setCopyStatus] = useState('');
     const copyTimerRef = useRef(null);
 
@@ -123,9 +123,11 @@ const FormCard = ({ form, responseCount, onRename, onDelete, onClick }) => {
                     </div>
                 </div>
                 <FormActionsMenu
+                    isTemplate={form.is_template}
                     onRename={() => onRename(form)}
                     onDelete={() => onDelete(form)}
                     onCopy={handleCopyLink}
+                    onToggleTemplate={() => onToggleTemplate(!form.is_template)}
                 />
             </div>
         </article>

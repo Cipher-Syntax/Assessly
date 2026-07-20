@@ -50,7 +50,7 @@ def create_form(owner, title=None, description=None):
     return form
 
 
-def update_draft(form, title=None, description=None, schema=None, settings=None):
+def update_draft(form, title=None, description=None, schema=None, settings=None, is_template=None):
     draft = _get_or_create_draft(form)
     if schema is None:
         schema = draft.schema
@@ -63,6 +63,8 @@ def update_draft(form, title=None, description=None, schema=None, settings=None)
             form.description = description
         if settings is not None:
             form.settings = settings
+        if is_template is not None:
+            form.is_template = is_template
         form.save()
 
         draft.schema = schema
@@ -90,3 +92,34 @@ def publish_form(form, user):
         form.save(update_fields=["published_version"])
 
     return published
+
+
+def clone_form(source_form, user):
+    with transaction.atomic():
+        new_form = Form.objects.create(
+            owner=user,
+            title=source_form.title,
+            description=source_form.description,
+            settings=source_form.settings,
+        )
+        from apps.permissions.models import FormAccessSettings
+
+        FormAccessSettings.objects.create(form=new_form)
+        
+        # Get schema to clone
+        if source_form.draft_version:
+            schema = source_form.draft_version.schema
+        elif source_form.published_version:
+            schema = source_form.published_version.schema
+        else:
+            schema = DEFAULT_SCHEMA
+            
+        draft = FormVersion.objects.create(
+            form=new_form,
+            version=0,
+            status=FormVersion.Status.DRAFT,
+            schema=schema,
+        )
+        new_form.draft_version = draft
+        new_form.save(update_fields=["draft_version"])
+    return new_form
