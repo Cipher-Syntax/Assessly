@@ -72,27 +72,39 @@ const ResponseDetailCard = ({ response, questions }) => {
                     <p className="text-sm text-red-600 mb-4">
                         The anti-cheat system logged {response.events.length} event(s) for this response.
                     </p>
-                    <ul className="text-sm text-red-700 space-y-4">
-                        {response.events.map(event => {
-                            if (event.event_type === 'webcam_snapshot') {
-                                return (
-                                    <li key={event.id} className="flex flex-col gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
-                                            <span>Webcam Snapshot at {new Date(event.occurred_at).toLocaleTimeString()}</span>
+                    {response.events.filter(e => e.event_type === 'webcam_snapshot').length > 0 && (
+                        <div className="mb-6">
+                            <h5 className="text-sm font-semibold text-red-700 mb-3">Webcam Snapshots</h5>
+                            <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
+                                {response.events
+                                    .filter(e => e.event_type === 'webcam_snapshot')
+                                    .map(event => (
+                                        <div key={event.id} className="flex flex-col gap-1 flex-shrink-0 snap-start w-64">
+                                            {event.metadata?.image_data ? (
+                                                <img 
+                                                    src={event.metadata.image_data} 
+                                                    alt="Webcam snapshot" 
+                                                    className="w-64 h-48 object-cover rounded-lg border-2 border-red-200" 
+                                                />
+                                            ) : (
+                                                <div className="w-64 h-48 bg-red-100 rounded-lg flex items-center justify-center border-2 border-red-200 text-red-400">
+                                                    No image data
+                                                </div>
+                                            )}
+                                            <span className="text-xs font-medium text-red-600 text-center">
+                                                {new Date(event.occurred_at).toLocaleTimeString()}
+                                            </span>
                                         </div>
-                                        {event.metadata?.image_data && (
-                                            <img 
-                                                src={event.metadata.image_data} 
-                                                alt="Webcam snapshot" 
-                                                className="w-48 h-auto rounded-lg border border-red-200 mt-1" 
-                                            />
-                                        )}
-                                    </li>
-                                );
-                            }
-
-                            return (
+                                    ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    <h5 className="text-sm font-semibold text-red-700 mb-3">Activity Log</h5>
+                    <ul className="text-sm text-red-700 space-y-3">
+                        {response.events
+                            .filter(e => e.event_type !== 'webcam_snapshot')
+                            .map(event => (
                                 <li key={event.id} className="flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
                                     <span>
@@ -101,8 +113,7 @@ const ResponseDetailCard = ({ response, questions }) => {
                                          event.event_type} at {new Date(event.occurred_at).toLocaleTimeString()}
                                     </span>
                                 </li>
-                            );
-                        })}
+                            ))}
                     </ul>
                 </div>
             )}

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 
-const WebcamProctor = ({ onReady, onSnapshot }) => {
+const WebcamProctor = forwardRef(({ onReady, onSnapshot }, ref) => {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const streamRef = useRef(null);
@@ -83,15 +83,9 @@ const WebcamProctor = ({ onReady, onSnapshot }) => {
     }, [hasPermission, captureSnapshot]);
 
     // Provide a way for parent to trigger a snapshot instantly (e.g. on blur)
-    useEffect(() => {
-        const handleWindowBlur = () => {
-            if (hasPermission) {
-                captureSnapshot();
-            }
-        };
-        window.addEventListener('blur', handleWindowBlur);
-        return () => window.removeEventListener('blur', handleWindowBlur);
-    }, [hasPermission, captureSnapshot]);
+    useImperativeHandle(ref, () => ({
+        captureSnapshot
+    }));
 
     if (error) {
         return (
@@ -137,6 +131,6 @@ const WebcamProctor = ({ onReady, onSnapshot }) => {
             </div>
         </div>
     );
-};
+});
 
 export default WebcamProctor;

@@ -242,16 +242,15 @@ const PublicFormPage = () => {
         if (!form?.settings?.is_timer_enabled) return null;
         const val = form?.settings?.time_limit_value || 0;
         const unit = form?.settings?.time_limit_unit || 'seconds';
-        if (unit === 'hours') return val * 3600;
-        if (unit === 'minutes') return val * 60;
         return val;
     }, [form?.settings]);
     
     const [timeLeft, setTimeLeft] = useState(null);
+    const webcamProctorRef = useRef(null);
 
     const removeToast = useCallback((toastId) => {
         setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
-        const timeoutId = toastTimersRef.current.get(toastId);
+        const timeoutId = toastTimersRef.current.get(timeoutId);
         if (timeoutId) {
             clearTimeout(timeoutId);
             toastTimersRef.current.delete(toastId);
@@ -604,19 +603,22 @@ const PublicFormPage = () => {
         }
 
         const handleVisibilityChange = () => {
-            const isHidden = document.hidden;
-            enqueueEvent({
-                event_type: isHidden ? 'visibility_hidden' : 'visibility_visible',
-                metadata: { source: 'visibilitychange' },
-                occurred_at: new Date().toISOString(),
-            });
-
-            if (isHidden) {
-                if (!focusLossActiveRef.current) {
-                    registerViolation();
+            if (document.visibilityState === 'hidden') {
+                enqueueEvent({
+                    event_type: 'visibility_hidden',
+                    metadata: { source: 'visibility' },
+                    occurred_at: new Date().toISOString(),
+                });
+                if (webcamProctorRef.current) {
+                    webcamProctorRef.current.captureSnapshot();
                 }
-                focusLossActiveRef.current = true;
+                registerViolation();
             } else {
+                enqueueEvent({
+                    event_type: 'visibility_visible',
+                    metadata: { source: 'visibility' },
+                    occurred_at: new Date().toISOString(),
+                });
                 focusLossActiveRef.current = false;
             }
         };
@@ -627,10 +629,10 @@ const PublicFormPage = () => {
                 metadata: { source: 'window' },
                 occurred_at: new Date().toISOString(),
             });
-            if (!focusLossActiveRef.current) {
-                registerViolation();
+            if (webcamProctorRef.current) {
+                webcamProctorRef.current.captureSnapshot();
             }
-            focusLossActiveRef.current = true;
+            registerViolation();
         };
 
         const handleFocus = () => {
@@ -911,6 +913,7 @@ const PublicFormPage = () => {
         <div className="min-h-screen bg-primary text-primary pb-10" style={containerStyle}>
             {isWebcamProctoringEnabled && !isSubmitted && (
                 <WebcamProctor 
+                    ref={webcamProctorRef}
                     onReady={setIsWebcamReady}
                     onSnapshot={(dataUrl) => {
                         enqueueEvent({
