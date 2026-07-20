@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react';
 import DashboardLayout from './components/DashboardLayout';
 import DeleteFormModal from './components/DeleteFormModal';
 import EmptyState from './components/EmptyState';
-import FormCard from './components/FormCard';
+import FormCard, { FormPreview } from './components/FormCard';
 import RenameFormModal from './components/RenameFormModal';
 import {
     createForm,
@@ -208,6 +208,7 @@ const DashboardPage = () => {
         }
 
         setForms((currentForms) => currentForms.filter((form) => form.id !== formId));
+        setTemplates((currentTemplates) => currentTemplates.filter((t) => t.id !== formId));
         setResponseCounts((currentCounts) => {
             const nextCounts = { ...currentCounts };
             delete nextCounts[formId];
@@ -353,8 +354,7 @@ const DashboardPage = () => {
                                 className="group cursor-pointer rounded-lg border border-default bg-secondary outline-none transition hover:border-focus focus-visible:ring-2 focus-visible:ring-focus text-left h-full flex flex-col"
                             >
                                 <div className="h-36 w-full rounded-t-lg bg-tertiary border-b border-default flex items-center justify-center text-muted group-hover:bg-default transition-colors relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 right-0 h-2 bg-primary-500 opacity-80"></div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500 opacity-50"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <FormPreview title={template.title} description={template.description} schema={template.schema} settings={template.settings} />
                                 </div>
                                 <div className="p-4 flex items-start justify-between gap-3 flex-1">
                                     <div className="min-w-0 flex-1">

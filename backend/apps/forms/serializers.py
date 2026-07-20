@@ -8,13 +8,19 @@ class FormListSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(source="public_id", read_only=True)
     is_published = serializers.SerializerMethodField()
     published_version_id = serializers.IntegerField(read_only=True)
+    preview_schema = serializers.SerializerMethodField()
 
     class Meta:
         model = Form
-        fields = ["id", "title", "is_published", "updated_at", "published_version_id", "is_template"]
+        fields = ["id", "title", "description", "is_published", "updated_at", "published_version_id", "is_template", "preview_schema", "settings"]
 
     def get_is_published(self, obj):
         return obj.has_published
+
+    def get_preview_schema(self, obj):
+        if obj.draft_version:
+            return obj.draft_version.schema
+        return {"sections": []}
 
 
 class FormDetailSerializer(serializers.ModelSerializer):

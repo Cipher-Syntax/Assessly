@@ -28,14 +28,20 @@ const normalizeForm = (form) => {
                 : null;
 
     const is_template = Boolean(form.is_template);
+    const schema = form.preview_schema || { sections: [] };
+    const settings = form.settings || {};
+    const description = form.description || '';
 
     return {
         id,
         title,
+        description,
         updated_at,
         is_published,
         published_version_id,
         is_template,
+        schema,
+        settings,
     };
 };
 
