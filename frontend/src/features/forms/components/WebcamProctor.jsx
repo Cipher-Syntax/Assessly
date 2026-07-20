@@ -114,7 +114,9 @@ const WebcamProctor = ({ onReady, onSnapshot }) => {
             <div className="flex flex-col items-center justify-center p-12 bg-secondary rounded-xl border border-default text-center animate-pulse">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-primary-500 mx-auto"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
                 <h3 className="text-xl font-bold text-primary mb-2">Requesting Camera Access</h3>
-                <p className="text-secondary">This assessment requires webcam proctoring.</p>
+                <p className="text-secondary mt-2">
+                    This assessment requires webcam proctoring to verify your identity and ensure academic integrity. Your camera will be active and record snapshots during the entire session.
+                </p>
             </div>
         );
     }
