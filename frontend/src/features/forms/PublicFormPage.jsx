@@ -9,6 +9,7 @@ import {
     logResponseEvent,
     submitResponse,
 } from './services/responseService';
+import WebcamProctor from './components/WebcamProctor';
 import PageSpinner from '../../components/ui/PageSpinner';
 import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../app/useToast';
@@ -196,6 +197,7 @@ const PublicFormPage = () => {
         const stored = readDraftSession(id);
         return stored?.sessionId ?? null;
     });
+    const [isWebcamReady, setIsWebcamReady] = useState(false);
     const [resumeBannerVisible, setResumeBannerVisible] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [lastSavedAt, setLastSavedAt] = useState(null);
@@ -227,6 +229,7 @@ const PublicFormPage = () => {
     const questions = useMemo(() => flattenQuestions(sections), [sections]);
 
     const isAntiCheatEnabled = form?.settings?.is_anti_cheat_enabled === true;
+    const isWebcamProctoringEnabled = form?.settings?.is_webcam_proctoring_enabled === true;
     
     // Theme
     const themePrimaryColor = form?.settings?.theme_primary_color || null;
@@ -906,11 +909,28 @@ const PublicFormPage = () => {
 
     return (
         <div className="min-h-screen bg-primary text-primary pb-10" style={containerStyle}>
-            {timeLimit && timeLeft !== null && !isSubmitted && (
-                <div className="fixed top-0 left-0 right-0 z-50 flex h-12 items-center justify-center bg-[var(--primary-500)] text-on-primary font-medium shadow-md transition-colors">
-                    <span className="text-sm">Time Remaining: {formatTime(timeLeft)}</span>
-                </div>
+            {isWebcamProctoringEnabled && !isSubmitted && (
+                <WebcamProctor 
+                    onReady={setIsWebcamReady}
+                    onSnapshot={(dataUrl) => {
+                        enqueueEvent({
+                            event_type: 'webcam_snapshot',
+                            metadata: { source: 'webcam', image_data: dataUrl },
+                            occurred_at: new Date().toISOString(),
+                        });
+                    }}
+                />
             )}
+            
+            {isWebcamProctoringEnabled && !isWebcamReady && !isSubmitted ? (
+                <div className="pt-20 px-4"></div>
+            ) : (
+                <>
+                    {timeLimit && timeLeft !== null && !isSubmitted && (
+                        <div className="fixed top-0 left-0 right-0 z-50 flex h-12 items-center justify-center bg-[var(--primary-500)] text-on-primary font-medium shadow-md transition-colors">
+                            <span className="text-sm">Time Remaining: {formatTime(timeLeft)}</span>
+                        </div>
+                    )}
             
             <header className="flex h-16 items-center border-b border-default bg-secondary px-4 shadow-sm">
                 {toasts.length > 0 && (
@@ -1022,6 +1042,8 @@ const PublicFormPage = () => {
                     </form>
                 )}
             </div>
+                </>
+            )}
         </div>
     );
 };

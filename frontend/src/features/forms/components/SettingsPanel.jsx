@@ -63,6 +63,24 @@ const SettingsPanel = ({ settings, onChange, isReadOnly }) => {
                         </label>
                     </div>
 
+                    {/* Webcam Proctoring Setting */}
+                    <div className="flex items-center justify-between p-6 border-b border-default hover:bg-tertiary transition-colors">
+                        <div>
+                            <h3 className="text-base font-normal text-primary">Advanced Webcam Proctoring</h3>
+                            <p className="text-sm text-secondary">Require camera permissions. Periodically capture snapshots and flag suspicious activity (e.g., leaving tab) with photo evidence.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={settings?.is_webcam_proctoring_enabled || false}
+                                onChange={() => onChange({ ...settings, is_webcam_proctoring_enabled: !(settings?.is_webcam_proctoring_enabled) })}
+                                disabled={isReadOnly}
+                            />
+                            <div className="w-11 h-6 bg-tertiary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-500)] peer-checked:border-[var(--primary-500)] border border-default"></div>
+                        </label>
+                    </div>
+
                     {/* Timer Setting */}
                     <div className="flex flex-col p-6 hover:bg-tertiary transition-colors">
                         <div className="flex items-center justify-between">

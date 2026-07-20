@@ -70,17 +70,39 @@ const ResponseDetailCard = ({ response, questions }) => {
                 <div className="rounded-xl border border-red-500/30 bg-red-50/50 p-6 shadow-sm">
                     <h4 className="text-lg font-medium text-red-700 mb-2">Integrity Report</h4>
                     <p className="text-sm text-red-600 mb-4">
-                        The anti-cheat system logged {response.events.length} violation(s) for this response.
+                        The anti-cheat system logged {response.events.length} event(s) for this response.
                     </p>
-                    <ul className="text-sm text-red-700 space-y-1">
-                        {response.events.map(event => (
-                            <li key={event.id} className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                                <span>
-                                    {event.event_type === 'visibility_hidden' ? 'Switched tab or hid window' : event.event_type} at {new Date(event.occurred_at).toLocaleTimeString()}
-                                </span>
-                            </li>
-                        ))}
+                    <ul className="text-sm text-red-700 space-y-4">
+                        {response.events.map(event => {
+                            if (event.event_type === 'webcam_snapshot') {
+                                return (
+                                    <li key={event.id} className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                                            <span>Webcam Snapshot at {new Date(event.occurred_at).toLocaleTimeString()}</span>
+                                        </div>
+                                        {event.metadata?.image_data && (
+                                            <img 
+                                                src={event.metadata.image_data} 
+                                                alt="Webcam snapshot" 
+                                                className="w-48 h-auto rounded-lg border border-red-200 mt-1" 
+                                            />
+                                        )}
+                                    </li>
+                                );
+                            }
+
+                            return (
+                                <li key={event.id} className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                                    <span>
+                                        {event.event_type === 'visibility_hidden' ? 'Switched tab or hid window' : 
+                                         event.event_type === 'window_blur' ? 'Lost window focus' : 
+                                         event.event_type} at {new Date(event.occurred_at).toLocaleTimeString()}
+                                    </span>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             )}
