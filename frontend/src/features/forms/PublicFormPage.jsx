@@ -612,7 +612,10 @@ const PublicFormPage = () => {
                 if (webcamProctorRef.current) {
                     webcamProctorRef.current.captureSnapshot();
                 }
-                registerViolation();
+                if (!focusLossActiveRef.current) {
+                    registerViolation();
+                }
+                focusLossActiveRef.current = true;
             } else {
                 enqueueEvent({
                     event_type: 'visibility_visible',
@@ -632,7 +635,10 @@ const PublicFormPage = () => {
             if (webcamProctorRef.current) {
                 webcamProctorRef.current.captureSnapshot();
             }
-            registerViolation();
+            if (!focusLossActiveRef.current) {
+                registerViolation();
+            }
+            focusLossActiveRef.current = true;
         };
 
         const handleFocus = () => {
@@ -909,8 +915,29 @@ const PublicFormPage = () => {
         return `${m}:${s}`;
     };
 
+    const handleContextMenu = (e) => {
+        if (isAntiCheatEnabled) {
+            e.preventDefault();
+            pushToast('Right-click is disabled during this assessment.', 'low');
+        }
+    };
+
+    const handleCopyCutPaste = (e) => {
+        if (isAntiCheatEnabled) {
+            e.preventDefault();
+            pushToast('Copy and paste are disabled during this assessment.', 'low');
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-primary text-primary pb-10" style={containerStyle}>
+        <div 
+            className={`min-h-screen bg-primary text-primary pb-10 ${isAntiCheatEnabled ? 'select-none' : ''}`} 
+            style={containerStyle}
+            onContextMenu={handleContextMenu}
+            onCopy={handleCopyCutPaste}
+            onCut={handleCopyCutPaste}
+            onPaste={handleCopyCutPaste}
+        >
             {isWebcamProctoringEnabled && !isSubmitted && (
                 <WebcamProctor 
                     ref={webcamProctorRef}
