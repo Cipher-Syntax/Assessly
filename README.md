@@ -1,6 +1,4 @@
-<div align="center">
-  <img src="./frontend/src/assets/images/hero-banner.svg" alt="Structured Forms, Secure Responses" width="100%" />
-</div>
+
 
 <div align="center">
   <img src="./frontend/src/assets/images/hero-banner.svg" alt="Structured Forms, Secure Responses" width="100%" />
