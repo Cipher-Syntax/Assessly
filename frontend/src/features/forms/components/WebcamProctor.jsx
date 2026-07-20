@@ -21,9 +21,6 @@ const WebcamProctor = ({ onReady, onSnapshot }) => {
                 }
                 
                 streamRef.current = stream;
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                }
                 setHasPermission(true);
                 onReady(true);
             } catch (err) {
@@ -43,6 +40,12 @@ const WebcamProctor = ({ onReady, onSnapshot }) => {
             }
         };
     }, [onReady]);
+
+    useEffect(() => {
+        if (hasPermission && videoRef.current && streamRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+        }
+    }, [hasPermission]);
 
     const captureSnapshot = useCallback(() => {
         if (!videoRef.current || !canvasRef.current || !hasPermission) return null;
