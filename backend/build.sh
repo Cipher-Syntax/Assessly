@@ -11,6 +11,9 @@ python manage.py collectstatic --no-input
 # Apply database migrations
 python manage.py migrate
 
+# Seed initial form templates
+python manage.py seed_templates
+
 # Create superuser non-interactively
 # Using '|| true' prevents the build from failing on subsequent deployments when the user already exists
 if [[ -n "${DJANGO_SUPERUSER_EMAIL}" && -n "${DJANGO_SUPERUSER_PASSWORD}" ]]; then
